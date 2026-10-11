@@ -1,5 +1,7 @@
 # Implement Weight Logic as an Effect-based web application
 
+Implemented 2026-10-11. This document records the implementation plan; [progress](README.md) and the [runbook](../README.md) record actual delivery, checks, and remaining limitations. The site is deployed at https://weightlogic.app. Fresh production email delivery, full machine-restart recovery, and real-device Safari were not separately verified.
+
 ## Requirements and settled decisions
 
 - PRODUCT_SPEC.md is the behavioral source of truth. Implement its entire scope, including model limitations, historical corrections, portability, and privacy.
@@ -13,7 +15,7 @@
 
 ## Current state and verification contract
 
-There is no existing implementation, package manifest, test command, or Git commit. Node 24 and pnpm are available; Bun was not found. Prefer pnpm unless installed dependency compatibility requires otherwise. Inspect current repository guidance before implementation.
+Initial state: only PRODUCT_SPEC.md and credentials existed. The implementation now uses Node 24, pnpm workspaces, and the pinned toolchain documented in the runbook.
 
 During scaffolding, establish and document these scripts (these are planned commands, not existing or verified commands):
 
@@ -42,7 +44,7 @@ Verification: authenticate to the selected account, inspect domain configuration
 
 ## Stage 2 — Scaffold the local stack and authenticated boundary
 
-Create a small single-app repository with frontend, Worker, pure domain logic, schemas, tests, and Alchemy configuration. Avoid unnecessary workspaces or service layers. Establish the scripts above and dependency lockfile.
+Create a small pnpm workspace with the React/Worker app at the root and shared pure domain logic in packages/domain, as requested by the owner. Avoid unnecessary service layers. Establish the scripts above and dependency lockfile.
 
 Run all application resources locally through Alchemy's supported local Cloudflare runtime. Keep cloud-only domain resources and remote state providers out of local reconciliation. Confirm local data survives restarts and that no production bindings are used.
 
