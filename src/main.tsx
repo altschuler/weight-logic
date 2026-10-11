@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { authClient } from "./lib/auth-client";
 import { SignIn } from "./components/sign-in";
 import { Journal } from "./components/journal";
+import { AppUpdate } from "./components/app-update";
 import {
   InstallApp,
   InstallAppPopup,
@@ -13,15 +14,14 @@ import "./styles.css";
 function App() {
   const installation = useInstallation();
   const { data, isPending } = authClient.useSession();
-  if (isPending)
-    return (
-      <main className="loading" role="status">
-        Opening your journal…
-      </main>
-    );
   return (
     <>
-      {data ? (
+      <AppUpdate installed={installation.installed} />
+      {isPending ? (
+        <main className="loading" role="status">
+          Opening your journal…
+        </main>
+      ) : data ? (
         <Journal
           key={data.user.id}
           email={data.user.email}
@@ -30,7 +30,7 @@ function App() {
       ) : (
         <SignIn />
       )}
-      <InstallAppPopup installation={installation} />
+      {!isPending && <InstallAppPopup installation={installation} />}
     </>
   );
 }
