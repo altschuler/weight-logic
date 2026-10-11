@@ -108,11 +108,11 @@ export function Settings({
         </div>
         <div className="settings-row">
           <div>
-            <h3>Clear tracking data</h3>
+            <h3>Delete journal data</h3>
             <p>Keep your account. Export a backup first.</p>
           </div>
           <Button variant="destructive" onClick={() => setClear(true)}>
-            Clear tracking data
+            Delete journal data
           </Button>
         </div>
         {error && (
@@ -149,7 +149,7 @@ export function Settings({
       {restore && (
         <Modal
           title="Replace your journal?"
-          description="This replaces all existing tracking data. Your account and sign-in stay unchanged."
+          description="This replaces your existing journal data. Your account and sign-in stay unchanged."
           close={() => setRestore(null)}
         >
           <ActionForm
@@ -170,16 +170,16 @@ export function Settings({
       )}
       {clear && (
         <Modal
-          title="Clear your journal?"
-          description="This permanently removes tracking data from this account. It cannot be undone without a backup."
+          title="Delete journal data?"
+          description="This permanently deletes your journal data, but keeps your account. It cannot be undone without a backup."
           close={() => setClear(false)}
         >
           <ActionForm
-            submit="Confirm clear"
+            submit="Confirm deletion"
             onSubmit={async () => {
               await mutate({ type: "clear", confirmed: true });
               setClear(false);
-              setNotice("Tracking data cleared. Your account remains active.");
+              setNotice("Journal data deleted. Your account remains active.");
             }}
           >
             <p>

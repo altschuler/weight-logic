@@ -196,9 +196,9 @@ test("history, replan acceptance, backup roundtrip and rejected restore", async 
   await expect(page.getByRole("alert")).toContainText("not a valid");
   expect(await read(page.request)).toEqual(original);
   await page
-    .getByRole("button", { name: "Clear tracking data", exact: true })
+    .getByRole("button", { name: "Delete journal data", exact: true })
     .click();
-  await page.getByRole("button", { name: "Confirm clear" }).click();
+  await page.getByRole("button", { name: "Confirm deletion" }).click();
   await expect(page.getByRole("dialog")).not.toBeVisible();
   expect((await read(page.request)).days).toHaveLength(0);
   await page.getByLabel("Choose backup").setInputFiles({
