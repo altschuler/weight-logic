@@ -111,6 +111,9 @@ strong {
   letter-spacing: -0.7px;
   white-space: nowrap;
 }
+.app-shell {
+  overflow-x: clip;
+}
 .app-header {
   max-width: 1280px;
   margin: auto;

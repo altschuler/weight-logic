@@ -58,7 +58,18 @@ export function Journal({
   return (
     <div className="app-shell">
       <header className="app-header">
-        <a className="brand" href="/" aria-label="Weight Logic home">
+        <a
+          className="brand flex items-center gap-3"
+          href="/"
+          aria-label="Weight Logic home"
+        >
+          <img
+            src="/icon.svg"
+            alt=""
+            width={32}
+            height={32}
+            className="shrink-0 rounded-sm"
+          />
           Weight Logic
         </a>
         <nav aria-label="Main navigation">
