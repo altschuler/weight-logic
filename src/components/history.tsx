@@ -276,13 +276,13 @@ function Trajectory({ data, today }: { data: Dataset; today: string }) {
               x2="740"
               y1={200 - f * 165}
               y2={200 - f * 165}
-              stroke="#e2eae6"
+              stroke="var(--border)"
             />
             <text
               x="54"
               y={204 - f * 165}
               textAnchor="end"
-              fill="#61746e"
+              fill="var(--muted-foreground)"
               fontSize="11"
             >
               {(low + f * (high - low)).toFixed(1)}
@@ -294,14 +294,14 @@ function Trajectory({ data, today }: { data: Dataset; today: string }) {
           x2={x(today)}
           y1="20"
           y2="210"
-          stroke="#aabbb2"
+          stroke="var(--muted-foreground)"
           strokeDasharray="4 5"
         />
         {segments.map((points, index) => (
           <polyline
             key={index}
             points={points.map((p) => `${x(p.date)},${y(p.value)}`).join(" ")}
-            stroke="#17584f"
+            stroke="var(--primary)"
             strokeWidth="2.5"
             fill="none"
           />
@@ -312,7 +312,11 @@ function Trajectory({ data, today }: { data: Dataset; today: string }) {
             cx={x(p.date)}
             cy={y(p.value)}
             r="4"
-            fill={p.period === "morning" ? "#91aa66" : "#397b98"}
+            fill={
+              p.period === "morning"
+                ? "var(--chart-morning)"
+                : "var(--chart-evening)"
+            }
             stroke="white"
             strokeWidth="1"
           >
@@ -321,10 +325,16 @@ function Trajectory({ data, today }: { data: Dataset; today: string }) {
             </title>
           </circle>
         ))}
-        <text x="64" y="232" fill="#61746e" fontSize="11">
+        <text x="64" y="232" fill="var(--muted-foreground)" fontSize="11">
           {start}
         </text>
-        <text x="740" y="232" textAnchor="end" fill="#61746e" fontSize="11">
+        <text
+          x="740"
+          y="232"
+          textAnchor="end"
+          fill="var(--muted-foreground)"
+          fontSize="11"
+        >
           {end}
         </text>
       </svg>

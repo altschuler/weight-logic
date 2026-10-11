@@ -13,9 +13,7 @@ export async function signIn(page: Page) {
     .fill(`journal-${crypto.randomUUID()}@example.test`);
   await page.getByRole("button", { name: "Email me a sign-in link" }).click();
   await page.getByRole("link", { name: "Open local sign-in link" }).click();
-  await expect(
-    page.getByRole("heading", { name: "Your journal" }),
-  ).toBeVisible();
+  await expect(page.getByLabel("Journal date")).toBeVisible();
 }
 export const post = (
   request: APIRequestContext,
@@ -53,9 +51,7 @@ export async function restore(page: Page, data = fixture()) {
   });
   expect(response.ok(), await response.text()).toBe(true);
   await page.reload();
-  await expect(
-    page.getByRole("heading", { name: "Your journal" }),
-  ).toBeVisible();
+  await expect(page.getByLabel("Journal date")).toBeVisible();
 }
 export async function weigh(
   page: Page,

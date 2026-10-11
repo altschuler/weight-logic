@@ -42,6 +42,8 @@ export function Journal({ email }: { email: string }) {
       </main>
     );
   const goal = goalAt(data, today);
+  const selectedDay = new Date(`${date}T12:00:00`);
+  const weekday = selectedDay.toLocaleDateString("en-GB", { weekday: "long" });
   const tabs = [
     { id: "journal", title: "Journal" },
     { id: "history", title: "History" },
@@ -51,7 +53,7 @@ export function Journal({ email }: { email: string }) {
     <div className="app-shell">
       <header className="app-header">
         <a className="brand" href="/" aria-label="Weight Logic home">
-          weight logic
+          Weight Logic
         </a>
         <nav aria-label="Main navigation">
           {tabs.map(({ id, title }) => (
@@ -74,113 +76,125 @@ export function Journal({ email }: { email: string }) {
           <LogOut />
         </Button>
       </header>
-      <main className="app-main">
-        <div className="page-heading">
-          <div>
-            <h1>
-              {tab === "journal"
-                ? "Your journal"
-                : tab === "history"
-                  ? "History & progress"
-                  : "Settings"}
-            </h1>
-          </div>
-          {goal && (
-            <Button variant="ghost" onClick={() => setGoalEditor(true)}>
-              Change goal
-            </Button>
-          )}
-        </div>
+      <main className={`app-main${tab === "journal" ? " daybook" : ""}`}>
         {tab === "journal" && (
-          <>
-            {!goal && (
-              <section className="onboarding">
-                <div>
-                  <h2>Set a weight goal</h2>
+          <aside className="date-rail" aria-label="Journal day">
+            <div className="date-display">
+              <p className="date-month">
+                {selectedDay.toLocaleDateString("en-GB", {
+                  month: "long",
+                  year: "numeric",
+                })}
+              </p>
+              <p className="date-number">{selectedDay.getDate()}</p>
+              <p className="date-weekday">{weekday}</p>
+            </div>
+            <div className="date-controls">
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="Previous day"
+                onClick={() => setDate(addDays(date, -1))}
+              >
+                <ChevronLeft />
+              </Button>
+              <Button variant="outline" onClick={() => setDate(today)}>
+                Today
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="Next day"
+                onClick={() => setDate(addDays(date, 1))}
+              >
+                <ChevronRight />
+              </Button>
+            </div>
+            <Input
+              aria-label="Journal date"
+              type="date"
+              value={date}
+              onChange={(event) => {
+                if (event.target.value) setDate(event.target.value);
+              }}
+            />
+          </aside>
+        )}
+        <div className="page-content">
+          <div className="page-heading">
+            <div>
+              <h1>
+                {tab === "journal"
+                  ? `${weekday}’s entries`
+                  : tab === "history"
+                    ? "History & progress"
+                    : "Settings"}
+              </h1>
+            </div>
+            {goal && (
+              <div className="goal-note">
+                {tab === "journal" && (
                   <p>
-                    Choose a starting weight, target weight, and target date.
+                    Goal {format(goal.target, data.units, "weight")}{" "}
+                    {unitLabel(data.units, "weight")} by{" "}
+                    {new Date(`${goal.deadline}T12:00:00`).toLocaleDateString(
+                      "en-GB",
+                      { day: "numeric", month: "short", year: "numeric" },
+                    )}
                   </p>
-                </div>
-                <Button onClick={() => setGoalEditor(true)}>
-                  Create your first goal
-                </Button>
-              </section>
-            )}
-            <div className="date-toolbar">
-              <div className="date-controls">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label="Previous day"
-                  onClick={() => setDate(addDays(date, -1))}
-                >
-                  <ChevronLeft />
-                </Button>
-                <Input
-                  aria-label="Journal date"
-                  type="date"
-                  value={date}
-                  onChange={(event) => {
-                    if (event.target.value) setDate(event.target.value);
-                  }}
-                />
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label="Next day"
-                  onClick={() => setDate(addDays(date, 1))}
-                >
-                  <ChevronRight />
-                </Button>
-                <Button variant="ghost" onClick={() => setDate(today)}>
-                  {date === today ? "Today" : "Go to today"}
+                )}
+                <Button variant="ghost" onClick={() => setGoalEditor(true)}>
+                  Change goal
                 </Button>
               </div>
-              <p className="muted">
-                {goal ? (
-                  <>
-                    Goal{" "}
-                    <strong>
-                      {format(goal.target, data.units, "weight")}{" "}
-                      {unitLabel(data.units, "weight")}
-                    </strong>{" "}
-                    by {goal.deadline}
-                  </>
-                ) : (
-                  "No active goal"
-                )}
-              </p>
-            </div>
-            <DayJournal
-              key={date}
+            )}
+          </div>
+          {tab === "journal" && (
+            <>
+              {!goal && (
+                <section className="onboarding">
+                  <div>
+                    <h2>Set a weight goal</h2>
+                    <p>
+                      Choose a starting weight, target weight, and target date.
+                    </p>
+                  </div>
+                  <Button onClick={() => setGoalEditor(true)}>
+                    Create your first goal
+                  </Button>
+                </section>
+              )}
+              <DayJournal
+                key={date}
+                data={data}
+                date={date}
+                today={today}
+                mutate={mutate}
+              />
+            </>
+          )}
+          {tab === "history" && (
+            <History
               data={data}
-              date={date}
               today={today}
-              mutate={mutate}
+              openDay={(date) => {
+                setDate(date);
+                setTab("journal");
+              }}
             />
-          </>
-        )}
-        {tab === "history" && (
-          <History
-            data={data}
-            today={today}
-            openDay={(date) => {
-              setDate(date);
-              setTab("journal");
-            }}
-          />
-        )}
-        {tab === "settings" && (
-          <Settings data={data} mutate={mutate} email={email} />
-        )}
-        <footer className="app-footer">
-          <p>
-            Food mass, not calories or an eating recommendation.{" "}
-            <button type="button" onClick={() => setTab("settings")}>
-              About the calculation
-            </button>
-          </p>
-        </footer>
+          )}
+          {tab === "settings" && (
+            <Settings data={data} mutate={mutate} email={email} />
+          )}
+          <footer className="app-footer">
+            <p>
+              Food mass, not calories or an eating recommendation.{" "}
+              <button type="button" onClick={() => setTab("settings")}>
+                About the calculation
+              </button>
+            </p>
+          </footer>
+        </div>
       </main>
       {goalEditor && (
         <GoalEditor

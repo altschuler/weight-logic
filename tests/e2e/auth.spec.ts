@@ -12,13 +12,9 @@ test("magic link signs in, survives reload, cannot be reused, and signs out", as
   await expect(link).toBeVisible();
   const href = await link.getAttribute("href");
   await link.click();
-  await expect(
-    page.getByRole("heading", { name: "Your journal" }),
-  ).toBeVisible();
+  await expect(page.getByLabel("Journal date")).toBeVisible();
   await page.reload();
-  await expect(
-    page.getByRole("heading", { name: "Your journal" }),
-  ).toBeVisible();
+  await expect(page.getByLabel("Journal date")).toBeVisible();
   await page.getByRole("button", { name: "Sign out" }).click();
   await expect(page.getByLabel("Email address")).toBeVisible();
   await page.goto(href!);

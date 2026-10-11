@@ -44,83 +44,157 @@ export function DayJournal({
     (day.morning !== null || day.evening !== null) &&
     goal !== null &&
     goal.deadline > today;
+  const weightSection = (period: "morning" | "evening") => (
+    <section className="journal-section">
+      <h2 className="capitalize">{period}</h2>
+      <div className="weigh-row">
+        <div>
+          {day[period] === null ? (
+            <span>No weight recorded</span>
+          ) : (
+            <>
+              <span>Weight</span>
+              <strong>
+                {format(day[period], data.units, "weight")} <small>{wu}</small>
+              </strong>
+            </>
+          )}
+        </div>
+        <Button
+          variant={day[period] === null ? "outline" : "ghost"}
+          aria-label={`${day[period] === null ? "Add" : "Edit"} ${period} weight`}
+          onClick={() => setWeightEditor(period)}
+        >
+          {day[period] === null ? <Plus /> : <Pencil />}
+          {day[period] === null ? "Add weight" : "Edit"}
+        </Button>
+      </div>
+    </section>
+  );
   return (
     <>
-      <div className="day-grid">
-        <section className="budget-panel" aria-label="Food-mass budget">
-          <div className="section-heading">
-            <p>Remaining budget</p>
-          </div>
-          <p className="budget-number" data-testid="remaining-budget">
-            {format(totals.remaining, data.units, "mass")}
-            <span>{totals.remaining !== null ? mu : ""}</span>
-          </p>
-          {(totals.remaining === null || totals.remaining.compare(0) < 0) && (
-            <p className="budget-caption">
-              {totals.remaining === null
-                ? !totals.planned
-                  ? "Set a goal to calculate a planned weight."
-                  : "Record a morning weight to see the budget."
-                : totals.remaining.compare(0) < 0
-                  ? "Above plan—not a reason to restrict food or fluids."
-                  : ""}
-            </p>
+      {weightSection("morning")}
+      <section className="journal-section meals">
+        <h2>Meals</h2>
+        <div className="meal-content">
+          {day.meals.length === 0 ? (
+            <div className="empty-state">
+              <h3>No meals recorded</h3>
+              <p>
+                {day.morning === null
+                  ? "Add a morning weigh-in first, then record your meals here."
+                  : "Add a meal to record its mass."}
+              </p>
+            </div>
+          ) : (
+            <div className="meal-list">
+              {day.meals.map((meal) => (
+                <div className="meal-row" key={meal.id}>
+                  <div className="meal-name">
+                    <strong>{meal.name || "Unnamed meal"}</strong>
+                    <span>
+                      {meal.period === "before"
+                        ? "Before evening"
+                        : "After evening"}
+                    </span>
+                  </div>
+                  <strong>
+                    {format(meal.mass, data.units, "mass")} {mu}
+                  </strong>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label={`Edit ${meal.name || "unnamed meal"}`}
+                    onClick={() => setMealEditor(meal)}
+                  >
+                    <Pencil />
+                  </Button>
+                </div>
+              ))}
+            </div>
           )}
-          <details className="budget-details">
-            <summary>Calculation</summary>
-            <div className="budget-equation">
-              <div>
-                <span>Gross budget</span>
-                <strong>
-                  {format(totals.gross, data.units, "mass")} {mu}
+          <div className="meal-actions">
+            <Button
+              onClick={() => setMealEditor("new")}
+              disabled={day.morning === null}
+            >
+              <Plus /> Add meal
+            </Button>
+            <details className="meal-summary">
+              <summary>
+                Total{" "}
+                <strong data-testid="meal-total">
+                  {format(totals.total, data.units, "mass")} {mu}
                 </strong>
+              </summary>
+              <div className="meal-totals">
+                <div>
+                  <span>Before evening</span>
+                  <strong>
+                    {format(totals.before, data.units, "mass")} {mu}
+                  </strong>
+                </div>
+                <div>
+                  <span>After evening</span>
+                  <strong>
+                    {format(totals.after, data.units, "mass")} {mu}
+                  </strong>
+                </div>
               </div>
-              <span aria-hidden="true">−</span>
-              <div>
-                <span>Applicable meals</span>
-                <strong>
-                  {format(totals.applicable, data.units, "mass")} {mu}
-                </strong>
-              </div>
-            </div>
-            <p className="budget-footnote">
-              {day.evening !== null
-                ? "Earlier meals stay in your history. Only after-evening meals reduce this budget."
-                : "All meals for this date count until an evening weight is recorded."}
+            </details>
+          </div>
+        </div>
+      </section>
+      {weightSection("evening")}
+      <section className="budget-panel" aria-label="Food-mass budget">
+        <div className="budget-summary">
+          <div>
+            <p>Planned evening</p>
+            <p className="budget-number">
+              {format(totals.planned, data.units, "weight")} <span>{wu}</span>
             </p>
-          </details>
-        </section>
-        <section className="panel weigh-ins">
-          <div className="section-heading">
-            <h2>Weigh-ins</h2>
           </div>
-          {(["morning", "evening"] as const).map((period) => (
-            <div className="weigh-row" key={period}>
-              <div>
-                <span className="capitalize">{period}</span>
-                <strong>
-                  {format(day[period], data.units, "weight")}{" "}
-                  <small>{day[period] !== null ? wu : "Not recorded"}</small>
-                </strong>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label={`${day[period] === null ? "Add" : "Edit"} ${period} weight`}
-                onClick={() => setWeightEditor(period)}
-              >
-                {day[period] === null ? <Plus /> : <Pencil />}
-              </Button>
+          <div>
+            <p>Remaining budget</p>
+            <p className="budget-number" data-testid="remaining-budget">
+              {format(totals.remaining, data.units, "mass")}
+              <span>{totals.remaining !== null ? mu : ""}</span>
+            </p>
+          </div>
+        </div>
+        <details className="budget-details">
+          <summary>Calculation</summary>
+          <div className="budget-equation">
+            <div>
+              <span>Gross budget</span>
+              <strong>
+                {format(totals.gross, data.units, "mass")} {mu}
+              </strong>
             </div>
-          ))}
-          <div className="planned-row">
-            <span>Planned evening weight</span>
-            <strong>
-              {format(totals.planned, data.units, "weight")} {wu}
-            </strong>
+            <span aria-hidden="true">−</span>
+            <div>
+              <span>Applicable meals</span>
+              <strong>
+                {format(totals.applicable, data.units, "mass")} {mu}
+              </strong>
+            </div>
           </div>
-        </section>
-      </div>
+          <p className="budget-footnote">
+            {day.evening !== null
+              ? "Earlier meals stay in your history. Only after-evening meals reduce this budget."
+              : "All meals for this date count until an evening weight is recorded."}
+          </p>
+        </details>
+        {(totals.remaining === null || totals.remaining.compare(0) < 0) && (
+          <p className="budget-caption">
+            {totals.remaining === null
+              ? !totals.planned
+                ? "Set a goal to calculate a planned weight."
+                : "Record a morning weight to see the budget."
+              : "Above plan—not a reason to restrict food or fluids."}
+          </p>
+        )}
+      </section>
       {totals.significant && !day.acknowledged && (
         <section className="feedback" aria-label="Plan reflection">
           <div>
@@ -145,77 +219,6 @@ export function DayJournal({
           </div>
         </section>
       )}
-      <section className="panel meals">
-        <div className="section-heading">
-          <div>
-            <h2>Meals</h2>
-          </div>
-          <Button
-            onClick={() => setMealEditor("new")}
-            disabled={day.morning === null}
-          >
-            <Plus /> Add meal
-          </Button>
-        </div>
-        <details className="meal-summary">
-          <summary>
-            Total{" "}
-            <strong data-testid="meal-total">
-              {format(totals.total, data.units, "mass")} {mu}
-            </strong>
-          </summary>
-          <div className="meal-totals">
-            <div>
-              <span>Before evening</span>
-              <strong>
-                {format(totals.before, data.units, "mass")} {mu}
-              </strong>
-            </div>
-            <div>
-              <span>After evening</span>
-              <strong>
-                {format(totals.after, data.units, "mass")} {mu}
-              </strong>
-            </div>
-          </div>
-        </details>
-        {day.meals.length === 0 ? (
-          <div className="empty-state">
-            <h3>No meals recorded</h3>
-            <p>
-              {day.morning === null
-                ? "Add a morning weigh-in first, then record your meals here."
-                : "Add a meal to record its mass."}
-            </p>
-          </div>
-        ) : (
-          <div className="meal-list">
-            {day.meals.map((meal) => (
-              <div className="meal-row" key={meal.id}>
-                <div className="meal-name">
-                  <strong>{meal.name || "Unnamed meal"}</strong>
-                  <span>
-                    {meal.period === "before"
-                      ? "Before evening"
-                      : "After evening"}
-                  </span>
-                </div>
-                <strong>
-                  {format(meal.mass, data.units, "mass")} {mu}
-                </strong>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label={`Edit ${meal.name || "unnamed meal"}`}
-                  onClick={() => setMealEditor(meal)}
-                >
-                  <Pencil />
-                </Button>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
       {weightEditor && (
         <WeightEditor
           key={`${date}-${weightEditor}`}
