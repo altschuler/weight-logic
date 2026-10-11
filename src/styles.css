@@ -131,6 +131,9 @@ strong {
 .app-header nav button {
   color: var(--muted-foreground);
 }
+.app-header .nav-icon {
+  display: none;
+}
 .app-header nav button[aria-current] {
   color: var(--primary);
   border-bottom: 2px solid var(--primary);
@@ -746,14 +749,29 @@ td:first-child {
     left: 0;
     width: 100%;
     margin: 0;
-    padding: 6px max(12px, env(safe-area-inset-right))
-      calc(6px + env(safe-area-inset-bottom))
-      max(12px, env(safe-area-inset-left));
-    background: var(--background);
+    padding: 0 env(safe-area-inset-right) env(safe-area-inset-bottom)
+      env(safe-area-inset-left);
+    background: var(--secondary);
     border-top: 1px solid var(--border);
+    box-shadow: 0 -3px 12px rgb(41 38 49 / 8%);
   }
   .app-header nav button {
     flex: 1;
+    gap: 6px;
+    padding-inline: 8px;
+    color: var(--primary);
+    font-weight: 600;
+  }
+  .app-header .nav-icon {
+    display: block;
+    width: 16px;
+    height: 16px;
+  }
+  .app-header nav button[aria-current] {
+    background: var(--primary);
+    color: #fff;
+    border-bottom: 0;
+    border-radius: var(--radius-md);
   }
   .app-main {
     padding: 24px 18px calc(88px + env(safe-area-inset-bottom));

@@ -1,5 +1,12 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { ChevronLeft, ChevronRight, LogOut } from "lucide-react";
+import {
+  BookOpen,
+  ChartNoAxesCombined,
+  ChevronLeft,
+  ChevronRight,
+  LogOut,
+  Settings2,
+} from "lucide-react";
 import {
   addDays,
   format,
@@ -51,9 +58,9 @@ export function Journal({
   const selectedDay = new Date(`${date}T12:00:00`);
   const weekday = selectedDay.toLocaleDateString("en-GB", { weekday: "long" });
   const tabs = [
-    { id: "journal", title: "Journal" },
-    { id: "history", title: "History" },
-    { id: "settings", title: "Settings" },
+    { id: "journal", title: "Journal", icon: BookOpen },
+    { id: "history", title: "History", icon: ChartNoAxesCombined },
+    { id: "settings", title: "Settings", icon: Settings2 },
   ] as const;
   return (
     <div className="app-shell">
@@ -73,13 +80,14 @@ export function Journal({
           Weight Logic
         </a>
         <nav aria-label="Main navigation">
-          {tabs.map(({ id, title }) => (
+          {tabs.map(({ id, title, icon: Icon }) => (
             <Button
               key={id}
               variant="ghost"
               aria-current={tab === id ? "page" : undefined}
               onClick={() => setTab(id)}
             >
+              <Icon className="nav-icon" aria-hidden="true" />
               {title}
             </Button>
           ))}
