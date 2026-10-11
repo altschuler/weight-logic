@@ -1,4 +1,4 @@
-import type { Tracker } from './tracker';
+import type { Tracker } from "./tracker";
 
 export interface Env {
   DB: D1Database;

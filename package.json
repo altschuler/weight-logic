@@ -9,7 +9,7 @@
     "lint": "oxlint src tests",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "deploy": "pnpm build && node --env-file=.env ./node_modules/alchemy/bin/alchemy.mjs deploy --stage production --yes"
+    "deploy": "pnpm build && node --env-file=.env ./node_modules/alchemy/bin/cli.js deploy --stage production --yes"
   },
   "packageManager": "pnpm@10.33.2",
   "dependencies": {
