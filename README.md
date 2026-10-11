@@ -27,6 +27,19 @@ pnpm build
 
 The E2E suite starts the local stack if necessary and tests desktop and mobile Chromium. It creates disposable local accounts, captures screenshots in `.amp/in/artifacts/`, and retains traces on failure. Mobile emulation is not a real-device Safari test.
 
+### Local demo journals
+
+With `pnpm dev` running in another terminal, choose a journal:
+
+```sh
+pnpm seed steady
+pnpm seed plateau
+```
+
+Each command restores 56 days through local today and prints a fresh single-use sign-in URL (valid for 10 minutes). Open that URL to explore the seeded journal. `steady` shows gradual loss with natural fluctuations; `plateau` shows initial loss followed by a month-long plateau and a replan six days ago. Both include missing weigh-ins, realistic named meals with gram masses and explicit before/after-evening periods, and acknowledgements on older days. Values are deterministic relative to today, so rerunning on the same day restores the same data.
+
+**Rerunning replaces only the chosen dedicated demo journal:** `demo-steady@example.test` or `demo-plateau@example.test`. Do not use these accounts for personal data. The script is fixed to `http://localhost:5173`, requires the development inbox, verifies the authenticated account, and uses real magic-link authentication plus the tracker restore API—not direct database access. There is no production URL or arbitrary-account option. After restore it reads back, validates, and compares the saved dataset, then reports counts and progress before generating your unused login link.
+
 ## Small architecture
 
 - `packages/domain`: shared Effect schemas, exact rational arithmetic, calendar dates, and pure dataset transitions. Canonical weights are kilograms, meals are grams; strings preserve exact decimals and fractions in backups.

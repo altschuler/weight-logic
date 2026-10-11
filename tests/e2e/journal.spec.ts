@@ -70,6 +70,12 @@ test("worked meal accounting, corrections, acknowledgement, units and persistenc
     path: `.amp/in/artifacts/journal-${info.project.name}.png`,
     fullPage: true,
   });
+  await page.getByText("Calculation", { exact: true }).click();
+  await expect(page.getByText("300 g", { exact: true })).toBeVisible();
+  await page.locator("summary").filter({ hasText: "Total" }).click();
+  await expect(page.getByText("430 g", { exact: true })).toBeVisible();
+  await page.getByText("Calculation", { exact: true }).click();
+  await page.locator("summary").filter({ hasText: "Total" }).click();
   await page.getByRole("button", { name: "Dismiss for this day" }).click();
   await expect(
     page.getByRole("region", { name: "Plan reflection" }),
@@ -169,6 +175,9 @@ test("history, replan acceptance, backup roundtrip and rejected restore", async 
     .getByLabel("Inspect planned weight on date")
     .fill(addDays(today, 10));
   await expect(page.getByTestId("projection-weight")).toHaveText("80 kg");
+  await page.locator("summary").filter({ hasText: "Recorded days" }).click();
+  await page.getByRole("table").getByRole("button", { name: today }).click();
+  await expect(page.getByLabel("Journal date")).toHaveValue(today);
   await page.getByRole("button", { name: "Settings", exact: true }).click();
   await noOverflow(page);
   await page.screenshot({
@@ -179,13 +188,11 @@ test("history, replan acceptance, backup roundtrip and rejected restore", async 
   await page.getByRole("button", { name: "Export backup" }).click();
   const download = await downloadPromise;
   const original = JSON.parse(await readFile((await download.path())!, "utf8"));
-  await page
-    .getByLabel("Choose backup")
-    .setInputFiles({
-      name: "broken.json",
-      mimeType: "application/json",
-      buffer: Buffer.from('{"version":1}'),
-    });
+  await page.getByLabel("Choose backup").setInputFiles({
+    name: "broken.json",
+    mimeType: "application/json",
+    buffer: Buffer.from('{"version":1}'),
+  });
   await expect(page.getByRole("alert")).toContainText("not a valid");
   expect(await read(page.request)).toEqual(original);
   await page
@@ -194,13 +201,11 @@ test("history, replan acceptance, backup roundtrip and rejected restore", async 
   await page.getByRole("button", { name: "Confirm clear" }).click();
   await expect(page.getByRole("dialog")).not.toBeVisible();
   expect((await read(page.request)).days).toHaveLength(0);
-  await page
-    .getByLabel("Choose backup")
-    .setInputFiles({
-      name: "backup.json",
-      mimeType: "application/json",
-      buffer: Buffer.from(JSON.stringify(original)),
-    });
+  await page.getByLabel("Choose backup").setInputFiles({
+    name: "backup.json",
+    mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify(original)),
+  });
   expect((await read(page.request)).days).toHaveLength(0);
   await page.getByRole("button", { name: "Replace with backup" }).click();
   await expect(page.getByRole("dialog")).not.toBeVisible();

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Moon, Plus, Sun, Utensils, Pencil, Info } from "lucide-react";
+import { Plus, Pencil } from "lucide-react";
 import {
   budget,
   emptyDay,
@@ -49,55 +49,53 @@ export function DayJournal({
       <div className="day-grid">
         <section className="budget-panel" aria-label="Food-mass budget">
           <div className="section-heading">
-            <p className="eyebrow">Remaining mass budget</p>
-            <span className="status-pill">
-              {day.evening !== null ? "Evening reference" : "Morning reference"}
-            </span>
+            <p>Remaining budget</p>
           </div>
           <p className="budget-number" data-testid="remaining-budget">
             {format(totals.remaining, data.units, "mass")}
             <span>{totals.remaining !== null ? mu : ""}</span>
           </p>
-          <p className="budget-caption">
-            {totals.remaining === null
-              ? !totals.planned
-                ? "Set a goal to calculate a planned weight."
-                : "Record a morning weight to see the budget."
-              : totals.remaining.compare(0) < 0
-                ? "Above the planned weight. This is not a prompt to restrict food or fluids."
-                : "The arithmetic difference from your plan, after recorded meals."}
-          </p>
-          <div className="budget-equation">
-            <div>
-              <span>Gross budget</span>
-              <strong>
-                {format(totals.gross, data.units, "mass")} {mu}
-              </strong>
+          {(totals.remaining === null || totals.remaining.compare(0) < 0) && (
+            <p className="budget-caption">
+              {totals.remaining === null
+                ? !totals.planned
+                  ? "Set a goal to calculate a planned weight."
+                  : "Record a morning weight to see the budget."
+                : totals.remaining.compare(0) < 0
+                  ? "Above plan—not a reason to restrict food or fluids."
+                  : ""}
+            </p>
+          )}
+          <details className="budget-details">
+            <summary>Calculation</summary>
+            <div className="budget-equation">
+              <div>
+                <span>Gross budget</span>
+                <strong>
+                  {format(totals.gross, data.units, "mass")} {mu}
+                </strong>
+              </div>
+              <span aria-hidden="true">−</span>
+              <div>
+                <span>Applicable meals</span>
+                <strong>
+                  {format(totals.applicable, data.units, "mass")} {mu}
+                </strong>
+              </div>
             </div>
-            <span aria-hidden="true">−</span>
-            <div>
-              <span>Applicable meals</span>
-              <strong>
-                {format(totals.applicable, data.units, "mass")} {mu}
-              </strong>
-            </div>
-          </div>
-          <p className="budget-footnote">
-            {day.evening !== null
-              ? "Earlier meals stay in your history. Only after-evening meals reduce this budget."
-              : "All meals for this date count until an evening weight is recorded."}
-          </p>
+            <p className="budget-footnote">
+              {day.evening !== null
+                ? "Earlier meals stay in your history. Only after-evening meals reduce this budget."
+                : "All meals for this date count until an evening weight is recorded."}
+            </p>
+          </details>
         </section>
         <section className="panel weigh-ins">
           <div className="section-heading">
             <h2>Weigh-ins</h2>
-            <span className="muted">{wu}</span>
           </div>
           {(["morning", "evening"] as const).map((period) => (
             <div className="weigh-row" key={period}>
-              <div className="icon-well">
-                {period === "morning" ? <Sun /> : <Moon />}
-              </div>
               <div>
                 <span className="capitalize">{period}</span>
                 <strong>
@@ -125,23 +123,12 @@ export function DayJournal({
       </div>
       {totals.significant && !day.acknowledged && (
         <section className="feedback" aria-label="Plan reflection">
-          <Info size={20} />
           <div>
-            <strong>A moment to reflect</strong>
             <p>
-              Recorded intake is{" "}
               {format(totals.deviation!.abs(), data.units, "mass")} {mu}{" "}
               {totals.deviation!.compare(0) > 0 ? "over" : "under"} this
-              period’s budget. This does not tell us whether you have eaten
-              enough. You can keep your plan or explicitly replan from a
-              measurement today.
+              period’s budget. Not a measure of nutritional needs.
             </p>
-            {!canReplan && (
-              <p className="muted">
-                Replanning needs today’s measurement and a future deadline.
-                Historical feedback never changes historical goals.
-              </p>
-            )}
             <div className="inline-actions">
               <ActionForm
                 submit="Dismiss for this day"
@@ -161,8 +148,7 @@ export function DayJournal({
       <section className="panel meals">
         <div className="section-heading">
           <div>
-            <p className="eyebrow">Your daily record</p>
-            <h2>Meals & food mass</h2>
+            <h2>Meals</h2>
           </div>
           <Button
             onClick={() => setMealEditor("new")}
@@ -171,49 +157,47 @@ export function DayJournal({
             <Plus /> Add meal
           </Button>
         </div>
-        <div className="meal-totals">
-          <div>
-            <span>Before evening</span>
-            <strong>
-              {format(totals.before, data.units, "mass")} {mu}
-            </strong>
-          </div>
-          <div>
-            <span>After evening</span>
-            <strong>
-              {format(totals.after, data.units, "mass")} {mu}
-            </strong>
-          </div>
-          <div>
-            <span>Total recorded</span>
+        <details className="meal-summary">
+          <summary>
+            Total{" "}
             <strong data-testid="meal-total">
               {format(totals.total, data.units, "mass")} {mu}
             </strong>
+          </summary>
+          <div className="meal-totals">
+            <div>
+              <span>Before evening</span>
+              <strong>
+                {format(totals.before, data.units, "mass")} {mu}
+              </strong>
+            </div>
+            <div>
+              <span>After evening</span>
+              <strong>
+                {format(totals.after, data.units, "mass")} {mu}
+              </strong>
+            </div>
           </div>
-        </div>
+        </details>
         {day.meals.length === 0 ? (
           <div className="empty-state">
-            <Utensils />
             <h3>No meals recorded</h3>
             <p>
               {day.morning === null
                 ? "Add a morning weigh-in first, then record your meals here."
-                : "Record the mass of your meal. No calorie counting or food lookup."}
+                : "Add a meal to record its mass."}
             </p>
           </div>
         ) : (
           <div className="meal-list">
             {day.meals.map((meal) => (
               <div className="meal-row" key={meal.id}>
-                <div className="meal-icon">
-                  <Utensils size={18} />
-                </div>
                 <div className="meal-name">
                   <strong>{meal.name || "Unnamed meal"}</strong>
                   <span>
                     {meal.period === "before"
-                      ? "Before evening weigh-in"
-                      : "After evening weigh-in"}
+                      ? "Before evening"
+                      : "After evening"}
                   </span>
                 </div>
                 <strong>
@@ -361,7 +345,7 @@ function MealEditor({
   return (
     <Modal
       title={meal ? "Edit meal" : "Add meal"}
-      description={`${date} · Only the mass matters to this calculation. Keep the measurement period accurate when correcting a meal.`}
+      description={date}
       close={close}
     >
       <ActionForm

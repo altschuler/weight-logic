@@ -4,9 +4,10 @@
   "type": "module",
   "scripts": {
     "dev": "concurrently -k 'alchemy dev --stage local' 'vite --host 127.0.0.1'",
+    "seed": "node scripts/seed.ts",
     "build": "vite build",
     "typecheck": "tsc --noEmit",
-    "lint": "oxlint src tests",
+    "lint": "oxlint src tests scripts",
     "test": "vitest run",
     "test:e2e": "playwright test",
     "deploy": "pnpm build && node --env-file=.env ./node_modules/alchemy/bin/cli.js deploy --stage production --yes"

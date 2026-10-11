@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { ArrowRight, Mail, Scale } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
@@ -17,39 +16,14 @@ export function SignIn() {
   const [localLink, setLocalLink] = useState<string | null>(null);
   return (
     <main className="sign-in">
-      <div className="brand">
-        <Scale aria-hidden="true" /> weight logic
-        <span className="brand-dot">.</span>
-      </div>
+      <div className="brand">weight logic</div>
       <div className="auth-layout">
-        <section className="auth-intro">
-          <p className="eyebrow">A little more perspective</p>
-          <h1>
-            Your weight.
-            <br />
-            Your plan.
-            <br />
-            <span>One day at a time.</span>
-          </h1>
-          <p>
-            A quiet place for your weigh-ins, meals, and the path you choose.
-            Food mass, not calories.
-          </p>
-          <div className="auth-rule">
-            <span>Measure</span>
-            <span>Record</span>
-            <span>Reflect</span>
-          </div>
-        </section>
         <section className="panel auth-card">
-          <div className="icon-well">
-            <Mail />
-          </div>
-          <h2>{sent ? "Check your inbox" : "Make room for clarity"}</h2>
+          <h1>{sent ? "Check your inbox" : "Sign in"}</h1>
           <p>
             {sent
               ? `We sent a sign-in link to ${email}. It works once and expires in 10 minutes. Check your spam folder too.`
-              : "Sign in or create your private account. No password to remember."}
+              : "Enter your email to sign in or create an account."}
           </p>
           <form
             onSubmit={async (event) => {
@@ -110,7 +84,6 @@ export function SignIn() {
                 : sent
                   ? "Send another link"
                   : "Email me a sign-in link"}
-              <ArrowRight />
             </Button>
           </form>
           {localLink && (
@@ -119,14 +92,9 @@ export function SignIn() {
               <p>
                 No email was sent. This uses a real, single-use sign-in link.
               </p>
-              <a href={localLink}>
-                Open local sign-in link <ArrowRight size={14} />
-              </a>
+              <a href={localLink}>Open local sign-in link</a>
             </aside>
           )}
-          <p className="fine-print">
-            Your records are private to your account.
-          </p>
         </section>
       </div>
       <p className="model-note">

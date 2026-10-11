@@ -1,14 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  BookOpen,
-  ChartNoAxesCombined,
-  ChevronLeft,
-  ChevronRight,
-  LogOut,
-  Scale,
-  Settings2,
-  Target,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, LogOut } from "lucide-react";
 import {
   addDays,
   format,
@@ -52,25 +43,24 @@ export function Journal({ email }: { email: string }) {
     );
   const goal = goalAt(data, today);
   const tabs = [
-    { id: "journal", title: "Journal", icon: BookOpen },
-    { id: "history", title: "History", icon: ChartNoAxesCombined },
-    { id: "settings", title: "Settings", icon: Settings2 },
+    { id: "journal", title: "Journal" },
+    { id: "history", title: "History" },
+    { id: "settings", title: "Settings" },
   ] as const;
   return (
     <div className="app-shell">
       <header className="app-header">
         <a className="brand" href="/" aria-label="Weight Logic home">
-          <Scale /> weight logic<span className="brand-dot">.</span>
+          weight logic
         </a>
         <nav aria-label="Main navigation">
-          {tabs.map(({ id, title, icon: Icon }) => (
+          {tabs.map(({ id, title }) => (
             <Button
               key={id}
               variant="ghost"
               aria-current={tab === id ? "page" : undefined}
               onClick={() => setTab(id)}
             >
-              <Icon />
               {title}
             </Button>
           ))}
@@ -87,13 +77,6 @@ export function Journal({ email }: { email: string }) {
       <main className="app-main">
         <div className="page-heading">
           <div>
-            <p className="eyebrow">
-              {tab === "journal"
-                ? "Small records. A clearer picture."
-                : tab === "history"
-                  ? "Every date has a place"
-                  : "Private, portable, yours"}
-            </p>
             <h1>
               {tab === "journal"
                 ? "Your journal"
@@ -102,20 +85,20 @@ export function Journal({ email }: { email: string }) {
                   : "Settings"}
             </h1>
           </div>
-          <Button variant="outline" onClick={() => setGoalEditor(true)}>
-            <Target />
-            {goal ? "Change goal" : "Set your goal"}
-          </Button>
+          {goal && (
+            <Button variant="ghost" onClick={() => setGoalEditor(true)}>
+              Change goal
+            </Button>
+          )}
         </div>
         {tab === "journal" && (
           <>
             {!goal && (
               <section className="onboarding">
                 <div>
-                  <h2>Start with a direction.</h2>
+                  <h2>Set a weight goal</h2>
                   <p>
-                    Choose a starting weight, a target, and a date. You can
-                    adjust the plan as life changes.
+                    Choose a starting weight, target weight, and target date.
                   </p>
                 </div>
                 <Button onClick={() => setGoalEditor(true)}>
@@ -191,11 +174,11 @@ export function Journal({ email }: { email: string }) {
           <Settings data={data} mutate={mutate} email={email} />
         )}
         <footer className="app-footer">
-          <Scale size={17} />
           <p>
-            Food mass, not calories. These numbers are an arithmetic record, not
-            an eating recommendation. Never fast, dehydrate, or restrict food to
-            compensate for a negative budget.
+            Food mass, not calories or an eating recommendation.{" "}
+            <button type="button" onClick={() => setTab("settings")}>
+              About the calculation
+            </button>
           </p>
         </footer>
       </main>

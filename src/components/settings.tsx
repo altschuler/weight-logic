@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Download, Upload, ShieldCheck } from "lucide-react";
 import { decodeDataset, type Dataset, type Units } from "@weight-logic/domain";
 import type { Mutate } from "@/lib/journal";
 import { ActionForm, Modal } from "./forms";
@@ -24,7 +23,7 @@ export function Settings({
   return (
     <div className="settings-stack">
       <section className="panel">
-        <h2>Make it yours</h2>
+        <h2>Units</h2>
         <ActionForm
           submit="Save preferences"
           onSubmit={async (fields) => {
@@ -46,30 +45,18 @@ export function Settings({
               <option value="metric">Metric · kilograms & grams</option>
               <option value="imperial">Imperial · pounds & ounces</option>
             </NativeSelect>
-            <p className="muted">
-              Only display units change. Your history and physical quantities
-              stay the same.
-            </p>
           </div>
         </ActionForm>
       </section>
       <section className="panel">
         <div className="section-heading">
-          <h2>Your data, in your hands</h2>
-          <ShieldCheck size={22} />
+          <h2>Data</h2>
         </div>
-        <p className="muted">
-          Signed in as {email}. Your weight and meal history is private to this
-          account. Backups contain personal tracking data; store them somewhere
-          safe.
-        </p>
+        <p className="muted">{email}</p>
         <div className="settings-row">
           <div>
             <h3>Export your journal</h3>
-            <p>
-              All measurements, meals, goals, units, and acknowledgements in one
-              versioned JSON backup.
-            </p>
+            <p>Download your complete journal as JSON. Keep it private.</p>
           </div>
           <Button
             variant="outline"
@@ -86,21 +73,16 @@ export function Settings({
               setTimeout(() => URL.revokeObjectURL(url), 1000);
             }}
           >
-            <Download /> Export backup
+            Export backup
           </Button>
         </div>
         <div className="settings-row">
           <div>
             <h3>Restore a backup</h3>
-            <p>
-              The file is checked before you confirm replacement. Invalid files
-              never erase your journal.
-            </p>
+            <p>Replace your journal from a backup after confirmation.</p>
           </div>
           <div className="file-picker">
-            <Label htmlFor="backup">
-              <Upload size={16} /> Choose backup
-            </Label>
+            <Label htmlFor="backup">Choose backup</Label>
             <Input
               id="backup"
               type="file"
@@ -127,10 +109,7 @@ export function Settings({
         <div className="settings-row">
           <div>
             <h3>Clear tracking data</h3>
-            <p>
-              Remove the journal, but keep your account. Export a backup first
-              if you want to restore it later.
-            </p>
+            <p>Keep your account. Export a backup first.</p>
           </div>
           <Button variant="destructive" onClick={() => setClear(true)}>
             Clear tracking data
@@ -148,8 +127,7 @@ export function Settings({
         )}
       </section>
       <section className="panel model-explanation">
-        <p className="eyebrow">Understand the numbers</p>
-        <h2>A plan, not a prescription</h2>
+        <h2>About the calculation</h2>
         <p>
           Weight Logic compares your planned evening weight with your actual
           measurement, then subtracts applicable recorded food mass. An evening

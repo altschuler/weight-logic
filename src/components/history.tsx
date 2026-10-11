@@ -35,7 +35,7 @@ export function History({
     <div className="history-stack">
       <div className="stats-grid">
         <Stat
-          label="Current measured weight"
+          label="Current weight"
           value={`${format(summary.current?.value ?? null, data.units, "weight")} ${unit}`}
           note={
             summary.current
@@ -46,7 +46,6 @@ export function History({
         <Stat
           label="Starting weight"
           value={`${format(summary.start, data.units, "weight")} ${unit}`}
-          note="Resolved starting baseline"
         />
         <Stat
           label={
@@ -55,19 +54,20 @@ export function History({
               : "Total weight lost"
           }
           value={`${format(summary.lost?.abs() ?? null, data.units, "weight")} ${unit}`}
-          note="Starting minus current weight"
         />
         <Stat
-          label="Average daily change"
-          value={rateLabel(summary.average, data)}
-          note="Endpoint average; not a trend forecast"
+          label={
+            summary.average && summary.average.compare(0) < 0
+              ? "Average daily gain"
+              : "Average daily loss"
+          }
+          value={`${format(summary.average?.abs() ?? null, data.units, "weight", 3)} ${unit}`}
         />
       </div>
       <section className="panel">
         <div className="section-heading">
           <div>
-            <p className="eyebrow">The longer view</p>
-            <h2>Your trajectory</h2>
+            <h2>Weight history</h2>
           </div>
           <span className="status-pill">
             {summary.goal
@@ -79,15 +79,12 @@ export function History({
         </div>
         <Trajectory data={data} today={today} />
         <p className="muted">
-          Solid lines are your chosen plan, not a prediction. Dots are actual
-          measurements; missing weigh-ins stay missing. New goals can create a
-          jump.
+          Lines show your plan, not a prediction. Dots are weigh-ins.
         </p>
         {summary.completion !== null && (
           <div className="completion">
             <span>Loss-goal completion</span>
             <strong>{Math.round(summary.completion)}%</strong>
-            <progress max={100} value={summary.completion} />
           </div>
         )}
         <div className="projection">
@@ -112,11 +109,10 @@ export function History({
           </div>
         </div>
       </section>
-      <section className="panel">
-        <h2>Recorded days</h2>
-        <p className="muted">
-          Open a date to review or correct its weigh-ins and meals.
-        </p>
+      <details className="panel history-details">
+        <summary>
+          Recorded days <span>{data.days.length}</span>
+        </summary>
         {data.days.length === 0 ? (
           <p className="empty-state">Your first weigh-in will appear here.</p>
         ) : (
@@ -160,12 +156,11 @@ export function History({
             </table>
           </div>
         )}
-      </section>
-      <section className="panel">
-        <h2>Goal history</h2>
-        <p className="muted">
-          Baselines reflect corrections to the measurements they use.
-        </p>
+      </details>
+      <details className="panel history-details">
+        <summary>
+          Goal history <span>{data.goals.length}</span>
+        </summary>
         <div className="goal-history">
           {data.goals.length === 0 ? (
             <p>No goals yet.</p>
@@ -174,7 +169,7 @@ export function History({
               .toSorted((a, b) => b.activation.localeCompare(a.activation))
               .map((goal) => (
                 <div key={goal.activation}>
-                  <span className="eyebrow">From {goal.activation}</span>
+                  <span>From {goal.activation}</span>
                   <strong>
                     {format(baseline(data, goal), data.units, "weight")} →{" "}
                     {format(goal.target, data.units, "weight")} {unit}
@@ -187,7 +182,7 @@ export function History({
               ))
           )}
         </div>
-      </section>
+      </details>
     </div>
   );
 }
@@ -198,13 +193,13 @@ function Stat({
 }: {
   label: string;
   value: string;
-  note: string;
+  note?: string;
 }) {
   return (
     <div className="stat">
       <span>{label}</span>
       <strong>{value}</strong>
-      <small>{note}</small>
+      {note && <small>{note}</small>}
     </div>
   );
 }
@@ -227,7 +222,7 @@ function Trajectory({ data, today }: { data: Dataset; today: string }) {
     .sort()
     .at(-1)!;
   const span = Math.max(1, daysBetween(start, end));
-  const x = (date: string) => 48 + (daysBetween(start, date) / span) * 692;
+  const x = (date: string) => 64 + (daysBetween(start, date) / span) * 676;
   const segments = goals.map((goal, index) => {
     const until = goals[index + 1]?.activation ?? end;
     const dates = [
@@ -277,14 +272,14 @@ function Trajectory({ data, today }: { data: Dataset; today: string }) {
         {[0, 0.5, 1].map((f) => (
           <g key={f}>
             <line
-              x1="48"
+              x1="64"
               x2="740"
               y1={200 - f * 165}
               y2={200 - f * 165}
               stroke="#e2eae6"
             />
             <text
-              x="38"
+              x="54"
               y={204 - f * 165}
               textAnchor="end"
               fill="#61746e"
@@ -326,7 +321,7 @@ function Trajectory({ data, today }: { data: Dataset; today: string }) {
             </title>
           </circle>
         ))}
-        <text x="48" y="232" fill="#61746e" fontSize="11">
+        <text x="64" y="232" fill="#61746e" fontSize="11">
           {start}
         </text>
         <text x="740" y="232" textAnchor="end" fill="#61746e" fontSize="11">
