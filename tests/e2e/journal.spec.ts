@@ -12,6 +12,51 @@ import {
 } from "./helpers";
 import { readFile } from "node:fs/promises";
 
+test("meal presets fill an editable name and save preset or custom meals", async ({
+  page,
+}, info) => {
+  await signIn(page);
+  await weigh(page, "morning", "79.2");
+  await page.getByRole("button", { name: "Add meal", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  const name = dialog.getByLabel("Meal name (optional)");
+  await expect(name).toHaveValue("");
+  await dialog.screenshot({
+    path: `.amp/in/artifacts/meal-empty-${info.project.name}.png`,
+  });
+  for (const preset of ["Snack", "Breakfast", "Lunch", "Dinner"]) {
+    await dialog.getByRole("button", { name: preset, exact: true }).click();
+    await expect(name).toHaveValue(preset);
+    await expect(dialog.getByRole("button", { pressed: true })).toHaveText(
+      preset,
+    );
+  }
+  await page.mouse.move(0, 0);
+  await dialog.screenshot({
+    path: `.amp/in/artifacts/meal-preset-${info.project.name}.png`,
+    animations: "disabled",
+  });
+  await page.getByLabel("Food weight (g)").fill("250");
+  await page.getByRole("button", { name: "Save meal" }).click();
+  await expect(dialog).not.toBeVisible();
+  await page.getByRole("button", { name: "Add meal", exact: true }).click();
+  await expect(name).toHaveValue("");
+  await dialog.getByRole("button", { name: "Snack", exact: true }).click();
+  await name.fill("Afternoon snack");
+  await expect(dialog.getByRole("button", { pressed: true })).toHaveCount(0);
+  await page.mouse.move(0, 0);
+  await dialog.screenshot({
+    path: `.amp/in/artifacts/meal-custom-${info.project.name}.png`,
+    animations: "disabled",
+  });
+  await page.getByLabel("Food weight (g)").fill("120");
+  await page.getByRole("button", { name: "Save meal" }).click();
+  await expect(dialog).not.toBeVisible();
+  expect(
+    (await read(page.request)).days[0].meals.map((meal) => meal.name),
+  ).toEqual(["Dinner", "Afternoon snack"]);
+});
+
 test("onboarding previews a goal before committing and supports historical dates", async ({
   page,
 }) => {

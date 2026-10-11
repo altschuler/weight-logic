@@ -344,6 +344,7 @@ function MealEditor({
   const initial = meal
     ? inUnits(meal.mass, data.units, "mass").toString(12)
     : "";
+  const [name, setName] = useState(meal?.name ?? "");
   const [remove, setRemove] = useState(false);
   return (
     <Modal
@@ -394,9 +395,27 @@ function MealEditor({
             <Field
               label="Meal name (optional)"
               name="name"
-              defaultValue={meal?.name ?? ""}
+              value={name}
+              onChange={(event) => setName(event.target.value)}
               placeholder="Lunch, a snack…"
             />
+            <div
+              className="flex flex-wrap gap-2"
+              role="group"
+              aria-label="Meal name presets"
+            >
+              {["Snack", "Breakfast", "Lunch", "Dinner"].map((preset) => (
+                <Button
+                  key={preset}
+                  type="button"
+                  variant={name === preset ? "default" : "outline"}
+                  aria-pressed={name === preset}
+                  onClick={() => setName(preset)}
+                >
+                  {preset}
+                </Button>
+              ))}
+            </div>
             <Field
               label={`Food weight (${unitLabel(data.units, "mass")})`}
               name="mass"
