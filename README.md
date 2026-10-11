@@ -62,7 +62,9 @@ magick public/icons/icon-512.png -resize 180x180 public/icons/apple-touch-icon.p
 magick public/icons/icon-512.png -resize 32x32 public/icons/favicon-32.png
 ```
 
-Browser tests simulate install events to check the Settings flow; they do not install an OS app. Before calling phone installation fully verified, test Add to Home Screen, standalone launch, and the email-link sign-in round trip on physical iPhone and Android devices. Browser and standalone authentication storage/link handling can differ.
+Installed apps default to a six-digit email code, entered inside the app. Normal browsers retain email-link sign-in and offer a code alternative. This avoids an iPhone email link signing into the default browser instead of the home-screen app's isolated session. Both methods use the same account and journal. Codes expire after ten minutes, are stored hashed, and allow three incorrect attempts. The local development inbox exposes the code only in local mode, just like development sign-in links.
+
+Browser tests simulate install events and isolated home-screen sessions; they do not install an OS app. Before calling phone installation fully verified, test Add to Home Screen, standalone launch, and the email-code sign-in round trip on physical iPhone and Android devices.
 
 ## Deploy
 

@@ -1,4 +1,4 @@
-import { auth, localInbox } from "./auth";
+import { auth, localInbox, localOTP } from "./auth";
 import type { Env } from "./env";
 import { Data, Effect } from "effect";
 import { todayIn } from "@weight-logic/domain";
@@ -27,7 +27,8 @@ export default {
           env.LOCAL_EMAIL === "true" &&
           request.method === "GET"
         ) {
-          return json({ url: localInbox(url.searchParams.get("email") ?? "") });
+          const email = url.searchParams.get("email") ?? "";
+          return json({ url: localInbox(email), otp: localOTP(email) });
         }
         if (url.pathname.startsWith("/api/auth/"))
           return yield* Effect.tryPromise(() => auth(env).handler(request));
