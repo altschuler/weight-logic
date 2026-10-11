@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { ChevronLeft, ChevronRight, LogOut } from "lucide-react";
 import {
   addDays,
@@ -16,7 +16,13 @@ import { GoalEditor } from "./goal-editor";
 import { History } from "./history";
 import { Settings } from "./settings";
 
-export function Journal({ email }: { email: string }) {
+export function Journal({
+  email,
+  installation,
+}: {
+  email: string;
+  installation: ReactNode;
+}) {
   const { data, error, load, mutate } = useJournal();
   const [today, setToday] = useState(localToday);
   const [date, setDate] = useState(localToday);
@@ -184,7 +190,12 @@ export function Journal({ email }: { email: string }) {
             />
           )}
           {tab === "settings" && (
-            <Settings data={data} mutate={mutate} email={email} />
+            <Settings
+              data={data}
+              mutate={mutate}
+              email={email}
+              installation={installation}
+            />
           )}
           <footer className="app-footer">
             <p>

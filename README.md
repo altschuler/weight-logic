@@ -49,6 +49,21 @@ Each command restores 56 days through local today and prints a fresh single-use 
 
 Tracking data is a versioned dataset stored atomically in a single SQLite row in each user's DO. This keeps corrections and backup replacement simple and transactional. The current **1.5 MB per-journal limit** stays below SQLite's row limit; oversized changes are rejected without changing stored data. Export a backup regularly. There is no offline editing, live multi-tab synchronization, or medical guidance.
 
+## Home-screen installation
+
+Settings includes installation instructions and an install button when the browser offers one. On iPhone/iPad, use Safari → Share → Add to Home Screen (enable Open as Web App if offered). On Android, use the browser’s Install app / Add to Home screen menu. The manifest launches `/` in standalone mode; no service worker, offline journal cache, or queued writes are used. An internet connection is required.
+
+The scale-and-smile icon is adapted from `../weight_mate_old/assets/logo.svg`. `public/icon.svg` is the editable source, with opaque background and artwork inside the maskable safe area. Regenerate PNG exports with ImageMagick:
+
+```sh
+magick -background none -density 384 public/icon.svg -resize 512x512 public/icons/icon-512.png
+magick public/icons/icon-512.png -resize 192x192 public/icons/icon-192.png
+magick public/icons/icon-512.png -resize 180x180 public/icons/apple-touch-icon.png
+magick public/icons/icon-512.png -resize 32x32 public/icons/favicon-32.png
+```
+
+Browser tests simulate install events to check the Settings flow; they do not install an OS app. Before calling phone installation fully verified, test Add to Home Screen, standalone launch, and the email-link sign-in round trip on physical iPhone and Android devices. Browser and standalone authentication storage/link handling can differ.
+
 ## Deploy
 
 Keep these values in the ignored, permission-restricted `.env` file, never in Git or client-side `VITE_*` variables:

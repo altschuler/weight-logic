@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { decodeDataset, type Dataset, type Units } from "@weight-logic/domain";
 import type { Mutate } from "@/lib/journal";
 import { ActionForm, Modal } from "./forms";
@@ -11,10 +11,12 @@ export function Settings({
   data,
   mutate,
   email,
+  installation,
 }: {
   data: Dataset;
   mutate: Mutate;
   email: string;
+  installation: ReactNode;
 }) {
   const [restore, setRestore] = useState<Dataset | null>(null);
   const [clear, setClear] = useState(false);
@@ -22,6 +24,7 @@ export function Settings({
   const [notice, setNotice] = useState("");
   return (
     <div className="settings-stack">
+      {installation}
       <section className="panel">
         <h2>Units</h2>
         <ActionForm

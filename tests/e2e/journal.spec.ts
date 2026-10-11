@@ -267,3 +267,27 @@ test("API isolates accounts, rejects cross-origin and invalid restores, and seri
   expect((await attack.json()).days).toHaveLength(0);
   await context.close();
 });
+
+test("home-screen installation retains early offers and falls back after dismissal", async ({
+  page,
+}) => {
+  await signIn(page);
+  // Simulate the browser boundary, not a real OS installation dialog.
+  await page.evaluate(() => {
+    const event = new Event("beforeinstallprompt", { cancelable: true });
+    Object.assign(event, { prompt: async () => ({ outcome: "dismissed" }) });
+    window.dispatchEvent(event);
+  });
+  await page.getByRole("button", { name: "Settings", exact: true }).click();
+  const install = page.getByRole("region", {
+    name: "Weight Logic on your home screen",
+  });
+  await install.getByRole("button", { name: "Install Weight Logic" }).click();
+  await expect(install.getByText("iPhone or iPad:")).toBeVisible();
+  await expect(install.getByText("Android:")).toBeVisible();
+  await noOverflow(page);
+  await page.evaluate(() => window.dispatchEvent(new Event("appinstalled")));
+  await expect(install.getByRole("status")).toContainText(
+    "Weight Logic is installed",
+  );
+});

@@ -59,6 +59,8 @@
 body {
   margin: 0;
   font-size: 14px;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) 0
+    env(safe-area-inset-left);
 }
 button,
 a,
@@ -611,6 +613,29 @@ td:first-child {
 .settings-stack .action-form {
   margin-top: 16px;
 }
+.install-app {
+  display: grid;
+  gap: 16px;
+}
+.install-heading {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.install-heading img {
+  flex-shrink: 0;
+  border-radius: 3px;
+}
+.install-app > button {
+  justify-self: start;
+}
+.install-app summary {
+  padding: 12px 0;
+  color: var(--primary);
+}
+.install-app details p {
+  margin-top: 10px;
+}
 .settings-row {
   display: flex;
   align-items: center;
@@ -725,7 +750,9 @@ td:first-child {
     left: 0;
     width: 100%;
     margin: 0;
-    padding: 6px 12px calc(6px + env(safe-area-inset-bottom));
+    padding: 6px max(12px, env(safe-area-inset-right))
+      calc(6px + env(safe-area-inset-bottom))
+      max(12px, env(safe-area-inset-left));
     background: var(--background);
     border-top: 1px solid var(--border);
   }
