@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Button } from "./ui/button";
+import { Dialog, DialogClose, DialogContent, DialogTitle } from "./ui/dialog";
 
 interface InstallPrompt extends Event {
   prompt(): Promise<{ outcome: "accepted" | "dismissed" }>;
@@ -52,21 +53,61 @@ export function useInstallation() {
   return { available: prompt !== null, installed, error, install };
 }
 
-export function InstallApp({
+export function InstallAppPopup({
   installation,
 }: {
   installation: ReturnType<typeof useInstallation>;
+}) {
+  const [open, setOpen] = useState(false);
+  const platform = /iPhone|iPod/i.test(navigator.userAgent)
+    ? "ios"
+    : /Android.*Mobile/i.test(navigator.userAgent)
+      ? "android"
+      : undefined;
+  useEffect(() => {
+    const standalone =
+      matchMedia("(display-mode: standalone)").matches ||
+      (navigator as Navigator & { standalone?: boolean }).standalone === true;
+    if (!platform || standalone) return;
+    try {
+      if (localStorage.getItem("weight-logic-install-seen")) return;
+      localStorage.setItem("weight-logic-install-seen", "true");
+    } catch {
+      // Installation help still works when browser storage is unavailable.
+    }
+    setOpen(true);
+  }, [platform]);
+
+  return (
+    <Dialog open={open && !installation.installed} onOpenChange={setOpen}>
+      <DialogContent
+        className="max-h-[calc(100dvh-2rem)] overflow-y-auto"
+        aria-describedby={undefined}
+      >
+        <DialogTitle className="sr-only">
+          Use Weight Logic as an app
+        </DialogTitle>
+        <InstallApp installation={installation} platform={platform} />
+        <DialogClose asChild>
+          <Button>Got it</Button>
+        </DialogClose>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export function InstallApp({
+  installation,
+  platform,
+}: {
+  installation: ReturnType<typeof useInstallation>;
+  platform?: "ios" | "android";
 }) {
   return (
     <section className="panel install-app" aria-labelledby="install-heading">
       <div className="install-heading">
         <img src="/icons/icon-192.png" alt="" width="48" height="48" />
-        <div>
-          <h2 id="install-heading">Weight Logic on your home screen</h2>
-          <p className="muted">
-            Open your journal like an app. Internet connection required.
-          </p>
-        </div>
+        <h2 id="install-heading">Install Weight Logic</h2>
       </div>
       {installation.installed ? (
         <p role="status">
@@ -80,22 +121,22 @@ export function InstallApp({
               Install Weight Logic
             </Button>
           )}
-          <details open={!installation.available}>
-            <summary>How to add it to your home screen</summary>
-            <p>
-              <strong>iPhone or iPad:</strong> Open this site in Safari, tap
-              Share, then Add to Home Screen. Enable Open as Web App if offered,
-              then tap Add.
-            </p>
-            <p>
-              <strong>Android:</strong> Open your browser’s menu, then choose
-              Install app or Add to Home screen.
-            </p>
-            <p className="muted">
-              If the option is missing, open weightlogic.app directly in Safari
-              or Chrome rather than inside another app.
-            </p>
-          </details>
+          <p>
+            Open your journal like an app.{" "}
+            {platform !== "android" && (
+              <>
+                <strong>iPhone or iPad:</strong> Tap Share → Add to Home
+                Screen.{" "}
+              </>
+            )}
+            {platform !== "ios" && (
+              <>
+                <strong>Android:</strong> Tap the browser menu → Install app or
+                Add to Home screen.{" "}
+              </>
+            )}
+            Internet connection required.
+          </p>
         </>
       )}
       {installation.error && (

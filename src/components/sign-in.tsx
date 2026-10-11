@@ -6,16 +6,32 @@ import { authClient } from "@/lib/auth-client";
 import { REGEXP_ONLY_DIGITS } from "input-otp";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "./ui/input-otp";
 
+const pendingCodeKey = "weight-logic-pending-code";
+
 export function SignIn() {
-  const [email, setEmail] = useState("");
+  const [pendingEmail] = useState(() => {
+    try {
+      const pending = JSON.parse(
+        localStorage.getItem(pendingCodeKey) ?? "null",
+      );
+      return typeof pending?.email === "string" &&
+        pending.expiresAt > Date.now()
+        ? (pending.email as string)
+        : "";
+    } catch {
+      return "";
+    }
+  });
+  const [email, setEmail] = useState(pendingEmail);
   const [method, setMethod] = useState<"code" | "link">(() =>
+    pendingEmail ||
     matchMedia("(display-mode: standalone)").matches ||
     (navigator as Navigator & { standalone?: boolean }).standalone === true
       ? "code"
       : "link",
   );
   const [code, setCode] = useState("");
-  const [sent, setSent] = useState(false);
+  const [sent, setSent] = useState(!!pendingEmail);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(
     new URLSearchParams(location.search).has("error")
@@ -45,6 +61,15 @@ export function SignIn() {
         throw new Error(
           result.error.message ?? "Could not send your email. Try again.",
         );
+      if (method === "code") {
+        localStorage.setItem(
+          pendingCodeKey,
+          JSON.stringify({
+            email,
+            expiresAt: Date.now() + 10 * 60 * 1000,
+          }),
+        );
+      }
       setSent(true);
       setCode("");
       if (import.meta.env.DEV) {
@@ -70,7 +95,21 @@ export function SignIn() {
   }
   return (
     <main className="sign-in">
-      <div className="brand">weight logic</div>
+      <div className="brand flex items-center gap-3">
+        <img
+          src="/icon.svg"
+          alt=""
+          width={48}
+          height={48}
+          className="rounded-sm"
+        />
+        Weight Logic
+      </div>
+      <p className="mt-5 text-muted-foreground">
+        Simple weight tracking and meal planning to help you work toward your
+        target weight. Use morning and evening weigh-ins to estimate your daily
+        food budget—with a focus on portion sizes, not specific foods.
+      </p>
       <div className="auth-layout">
         <section className="panel auth-card">
           <h1>
@@ -108,6 +147,7 @@ export function SignIn() {
                       result.error.message ??
                       "Could not verify this code. Try again.",
                   );
+                localStorage.removeItem(pendingCodeKey);
               } catch (cause) {
                 setError(
                   cause instanceof Error
@@ -201,6 +241,7 @@ export function SignIn() {
                   variant="ghost"
                   disabled={busy}
                   onClick={() => {
+                    localStorage.removeItem(pendingCodeKey);
                     setSent(false);
                     setCode("");
                     setError("");

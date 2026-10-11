@@ -3,7 +3,11 @@ import { createRoot } from "react-dom/client";
 import { authClient } from "./lib/auth-client";
 import { SignIn } from "./components/sign-in";
 import { Journal } from "./components/journal";
-import { InstallApp, useInstallation } from "./components/install-app";
+import {
+  InstallApp,
+  InstallAppPopup,
+  useInstallation,
+} from "./components/install-app";
 import "./styles.css";
 
 function App() {
@@ -15,13 +19,19 @@ function App() {
         Opening your journal…
       </main>
     );
-  if (!data) return <SignIn />;
   return (
-    <Journal
-      key={data.user.id}
-      email={data.user.email}
-      installation={<InstallApp installation={installation} />}
-    />
+    <>
+      {data ? (
+        <Journal
+          key={data.user.id}
+          email={data.user.email}
+          installation={<InstallApp installation={installation} />}
+        />
+      ) : (
+        <SignIn />
+      )}
+      <InstallAppPopup installation={installation} />
+    </>
   );
 }
 createRoot(document.getElementById("root")!).render(

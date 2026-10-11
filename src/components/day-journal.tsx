@@ -149,7 +149,7 @@ export function DayJournal({
       <section className="budget-panel" aria-label="Food-mass budget">
         <div className="budget-summary">
           <div>
-            <p>Planned evening</p>
+            <p>Planned evening weight</p>
             <p className="budget-number">
               {format(totals.planned, data.units, "weight")} <span>{wu}</span>
             </p>
@@ -166,14 +166,14 @@ export function DayJournal({
           <summary>Calculation</summary>
           <div className="budget-equation">
             <div>
-              <span>Gross budget</span>
+              <span>Budget before meals</span>
               <strong>
                 {format(totals.gross, data.units, "mass")} {mu}
               </strong>
             </div>
             <span aria-hidden="true">−</span>
             <div>
-              <span>Applicable meals</span>
+              <span>Meals counted</span>
               <strong>
                 {format(totals.applicable, data.units, "mass")} {mu}
               </strong>
@@ -212,7 +212,7 @@ export function DayJournal({
               </ActionForm>
               {canReplan && (
                 <Button variant="outline" onClick={() => setReplan(true)}>
-                  Review replan
+                  Review your plan
                 </Button>
               )}
             </div>
@@ -274,7 +274,7 @@ function WeightEditor({
   return (
     <Modal
       title={`${value === null ? "Add" : "Edit"} ${period} weight`}
-      description={`${date} · ${period === "morning" ? "Morning weight enables food budgeting." : "An evening measurement resets the reference; earlier meals are not subtracted again."}`}
+      description={`${date} · ${period === "morning" ? "Weigh yourself before breakfast. This measurement sets your starting food budget for the day." : "Weigh yourself before your last meal. This updates your remaining budget using your actual weight."}`}
       close={close}
     >
       <ActionForm
@@ -398,14 +398,18 @@ function MealEditor({
               placeholder="Lunch, a snack…"
             />
             <Field
-              label={`Food mass (${unitLabel(data.units, "mass")})`}
+              label={`Food weight (${unitLabel(data.units, "mass")})`}
               name="mass"
               inputMode="decimal"
               defaultValue={initial}
               required
             />
+            <p className="muted">
+              Use a kitchen scale to weigh your portion, excluding the plate.
+              Enter its weight, not its calories.
+            </p>
             <div className="field">
-              <Label htmlFor="meal-period">Measurement period</Label>
+              <Label htmlFor="meal-period">When did you eat?</Label>
               <NativeSelect
                 id="meal-period"
                 name="period"

@@ -130,6 +130,25 @@ export function Settings({
         )}
       </section>
       <section className="panel model-explanation">
+        <h2>How it works</h2>
+        <p>
+          Set a weight goal and timeline. Weight Logic creates a daily weight
+          plan and compares it with your weigh-ins to estimate a food-mass
+          budget. Logging meals updates what remains.
+        </p>
+        <p>
+          Based on the feedback weight control method by Professor Jakob
+          Stoustrup. Learn more about{" "}
+          <a
+            href="https://weightctrlsite.wordpress.com/"
+            className="underline underline-offset-4"
+          >
+            the original method
+          </a>
+          .
+        </p>
+      </section>
+      <section className="panel model-explanation">
         <h2>About the calculation</h2>
         <p>
           Weight Logic compares your planned evening weight with your actual

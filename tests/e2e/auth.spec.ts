@@ -1,6 +1,15 @@
 import { test, expect } from "@playwright/test";
 import { noOverflow, signIn } from "./helpers";
 
+test.beforeEach(async ({ page }) => {
+  await page.addLocatorHandler(
+    page.getByRole("dialog", { name: "Use Weight Logic as an app" }),
+    async (dialog) => {
+      await dialog.getByRole("button", { name: "Got it" }).click();
+    },
+  );
+});
+
 test("magic link signs in, survives reload, cannot be reused, and signs out", async ({
   page,
 }) => {
@@ -80,6 +89,10 @@ test("email code signs into the existing account inside an isolated home-screen 
       .getByRole("button", { name: "Email me a sign-in code" })
       .click();
     const code = await installed.locator(".local-mail code").innerText();
+    await installed.reload();
+    await expect(
+      installed.getByRole("heading", { name: "Enter your code" }),
+    ).toBeVisible();
     const wrong = code === "000000" ? "111111" : "000000";
     await installed.getByLabel("Sign-in code", { exact: true }).fill(wrong);
     await installed.getByRole("button", { name: "Sign in with code" }).click();
@@ -96,6 +109,8 @@ test("email code signs into the existing account inside an isolated home-screen 
     ).json();
     expect(session.user.id).toBe(original.user.id);
     await installed.getByRole("button", { name: "Sign out" }).click();
+    await installed.reload();
+    await expect(installed.getByLabel("Email address")).toBeVisible();
     const reused = await app.request.post("/api/auth/sign-in/email-otp", {
       headers: { Origin: "http://localhost:5173" },
       data: { email: original.user.email, otp: code },

@@ -8,6 +8,12 @@ import {
 
 export async function signIn(page: Page) {
   await page.goto("/");
+  await page.addLocatorHandler(
+    page.getByRole("dialog", { name: "Use Weight Logic as an app" }),
+    async (dialog) => {
+      await dialog.getByRole("button", { name: "Got it" }).click();
+    },
+  );
   await page
     .getByLabel("Email address")
     .fill(`journal-${crypto.randomUUID()}@example.test`);
@@ -68,7 +74,7 @@ export async function weigh(
 export async function addMeal(page: Page, name: string, mass: string) {
   await page.getByRole("button", { name: "Add meal", exact: true }).click();
   await page.getByLabel("Meal name (optional)").fill(name);
-  await page.getByLabel("Food mass (g)").fill(mass);
+  await page.getByLabel("Food weight (g)").fill(mass);
   await page.getByRole("button", { name: "Save meal" }).click();
   await expect(page.getByRole("dialog")).not.toBeVisible();
 }

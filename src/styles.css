@@ -629,13 +629,6 @@ td:first-child {
 .install-app > button {
   justify-self: start;
 }
-.install-app summary {
-  padding: 12px 0;
-  color: var(--primary);
-}
-.install-app details p {
-  margin-top: 10px;
-}
 .settings-row {
   display: flex;
   align-items: center;

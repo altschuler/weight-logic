@@ -142,7 +142,7 @@ test("history, replan acceptance, backup roundtrip and rejected restore", async 
     ],
   });
   await weigh(page, "morning", "81.7");
-  await page.getByRole("button", { name: "Review replan" }).click();
+  await page.getByRole("button", { name: "Review your plan" }).click();
   await expect(page.getByText("Original plan’s fixed rate")).toBeVisible();
   await noOverflow(page);
   await page
@@ -157,7 +157,7 @@ test("history, replan acceptance, backup roundtrip and rejected restore", async 
   });
   await page.getByRole("button", { name: "Cancel", exact: true }).click();
   expect((await read(page.request)).goals).toHaveLength(1);
-  await page.getByRole("button", { name: "Review replan" }).click();
+  await page.getByRole("button", { name: "Review your plan" }).click();
   await page.getByRole("button", { name: "Accept replan" }).click();
   await expect(page.getByRole("dialog")).not.toBeVisible();
   expect((await read(page.request)).goals).toHaveLength(2);
@@ -280,7 +280,7 @@ test("home-screen installation retains early offers and falls back after dismiss
   });
   await page.getByRole("button", { name: "Settings", exact: true }).click();
   const install = page.getByRole("region", {
-    name: "Weight Logic on your home screen",
+    name: "Install Weight Logic",
   });
   await install.getByRole("button", { name: "Install Weight Logic" }).click();
   await expect(install.getByText("iPhone or iPad:")).toBeVisible();

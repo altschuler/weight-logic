@@ -162,7 +162,8 @@ export function Journal({
                   <div>
                     <h2>Set a weight goal</h2>
                     <p>
-                      Choose a starting weight, target weight, and target date.
+                      Set your target weight and date, then record your morning
+                      weight to see your first food-mass budget.
                     </p>
                   </div>
                   <Button onClick={() => setGoalEditor(true)}>
