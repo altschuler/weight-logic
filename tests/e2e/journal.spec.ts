@@ -12,6 +12,19 @@ import {
 } from "./helpers";
 import { readFile } from "node:fs/promises";
 
+test("decimal commas save weights and meals and survive reload", async ({ page }) => {
+  await signIn(page);
+  await weigh(page, "morning", "79,2");
+  await weigh(page, "evening", "79.7");
+  await addMeal(page, "Lunch", "237,5");
+  await page.reload();
+  const saved = await read(page.request);
+  expect(saved.days[0]).toMatchObject({ morning: "396/5", evening: "797/10" });
+  expect(saved.days[0].meals[0].mass).toBe("475/2");
+  await page.getByRole("button", { name: "Edit morning weight" }).click();
+  await expect(page.getByLabel("Weight (kg)", { exact: true })).toHaveValue("79.2");
+});
+
 test("meal presets fill an editable name and save preset or custom meals", async ({
   page,
 }, info) => {

@@ -189,6 +189,32 @@ it("computes endpoint statistics, excludes future measurements and preserves sig
   expect(stats(emptyDataset(), date).average).toBeNull();
 });
 
+it("accepts decimal commas and points without accepting mixed or repeated separators", () => {
+  for (const value of ["79,2", "79.2"])
+    expect(toCanonical(value, "metric", "weight")).toBe("396/5");
+  expect(
+    q(toCanonical("1,5", "imperial", "weight")).equals("0.680388555"),
+  ).toBe(true);
+  expect(
+    q(toCanonical("1,25", "imperial", "mass")).equals("35.43690390625"),
+  ).toBe(true);
+  expect(toCanonical("0,5", "metric", "mass")).toBe("1/2");
+  for (const value of [
+    "79,2.3",
+    "79.2,3",
+    "79,,2",
+    "1,234,567",
+    "79,",
+    "-79,2",
+  ])
+    expect(() => toCanonical(value, "metric", "weight")).toThrow(
+      "Enter a valid decimal amount.",
+    );
+  expect(() => toCanonical("0,0", "metric", "weight")).toThrow(
+    "Weight must be greater than zero.",
+  );
+});
+
 it("preserves exact fractional physical quantities across unit changes", () => {
   const kg = toCanonical("176.25", "imperial", "weight");
   expect(inUnits(kg, "imperial", "weight").equals("176.25")).toBe(true);

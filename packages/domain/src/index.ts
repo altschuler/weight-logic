@@ -383,9 +383,9 @@ export function toCanonical(
   units: Units,
   kind: "weight" | "mass",
 ) {
-  if (!/^\d+(?:\.\d+)?$/.test(value))
+  if (!/^\d+(?:[.,]\d+)?$/.test(value))
     throw new Error("Enter a valid decimal amount.");
-  const result = q(value).mul(
+  const result = q(value.replace(",", ".")).mul(
     units === "metric" ? 1 : kind === "weight" ? "0.45359237" : "28.349523125",
   );
   if (kind === "weight" && result.compare(0) <= 0)
