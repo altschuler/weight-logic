@@ -35,6 +35,8 @@ export function Journal({
   const [date, setDate] = useState(localToday);
   const [tab, setTab] = useState<"journal" | "history" | "settings">("journal");
   const [goalEditor, setGoalEditor] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
+  const [signOutError, setSignOutError] = useState("");
   useEffect(() => {
     const id = setInterval(() => setToday(localToday()), 30_000);
     return () => clearInterval(id);
@@ -96,11 +98,29 @@ export function Journal({
           variant="ghost"
           size="icon"
           aria-label="Sign out"
-          onClick={() => void authClient.signOut()}
+          disabled={signingOut}
+          onClick={async () => {
+            setSigningOut(true);
+            setSignOutError("");
+            try {
+              const result = await authClient.signOut();
+              if (result.error)
+                throw new Error("Could not sign out. Please try again.");
+            } catch {
+              setSignOutError("Could not sign out. Please try again.");
+            } finally {
+              setSigningOut(false);
+            }
+          }}
         >
           <LogOut />
         </Button>
       </header>
+      {signOutError && (
+        <p className="error" role="alert">
+          {signOutError}
+        </p>
+      )}
       <main className={`app-main${tab === "journal" ? " daybook" : ""}`}>
         {tab === "journal" && (
           <aside className="date-rail" aria-label="Journal day">

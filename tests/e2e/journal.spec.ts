@@ -25,6 +25,106 @@ test("decimal commas save weights and meals and survive reload", async ({ page }
   await expect(page.getByLabel("Weight (kg)", { exact: true })).toHaveValue("79.2");
 });
 
+test("overlapping saves report busy and allow retry after the pending change", async ({
+  page,
+}) => {
+  await signIn(page);
+  let release!: () => void;
+  const pending = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.route("**/api/tracker", async (route) => {
+    const response = await route.fetch();
+    await pending;
+    await route.fulfill({ response });
+  });
+  await page.getByRole("button", { name: "Settings", exact: true }).click();
+  await page.getByRole("button", { name: "Save preferences" }).click();
+  await expect(page.getByRole("button", { name: "Saving…" })).toBeDisabled();
+  await page.getByRole("button", { name: "Journal", exact: true }).click();
+  await page.getByRole("button", { name: "Add morning weight" }).click();
+  await page.getByLabel("Weight (kg)", { exact: true }).fill("79.2");
+  await page.getByRole("button", { name: "Save weight" }).click();
+  await expect(page.getByRole("alert")).toHaveText(
+    "A change is still saving. Please try again.",
+  );
+  const response = page.waitForResponse("**/api/tracker");
+  release();
+  await response;
+  await page.unroute("**/api/tracker");
+  await page.getByRole("button", { name: "Save weight" }).click();
+  await expect(page.getByRole("dialog")).not.toBeVisible();
+  expect((await read(page.request)).days[0].morning).toBe("396/5");
+});
+
+test("a committed meal can be retried without duplication and saving keeps its editor open", async ({
+  page,
+}, info) => {
+  await signIn(page);
+  await weigh(page, "morning", "79.2");
+  let release!: () => void;
+  const pending = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.route("**/api/tracker", async (route) => {
+    if (route.request().method() !== "POST") return route.continue();
+    await route.fetch(); // Commit the meal, but lose its successful response.
+    await pending;
+    await route.fulfill({
+      status: 503,
+      json: { error: "Response lost. Try again." },
+    });
+  });
+  await page.getByRole("button", { name: "Add meal", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByLabel("Meal name (optional)").fill("Lunch");
+  await dialog.getByLabel("Food weight (g)").fill("237");
+  await dialog.getByRole("button", { name: "Save meal" }).click();
+  await expect(
+    dialog.getByRole("button", { name: "Close", exact: true }),
+  ).toBeDisabled();
+  await page.keyboard.press("Escape");
+  await page.mouse.click(0, 0);
+  await expect(dialog).toBeVisible();
+  await expect
+    .poll(async () => (await read(page.request)).days[0].meals.length)
+    .toBe(1);
+  const committed = (await read(page.request)).days[0].meals[0];
+  release();
+  await expect(dialog.getByRole("alert")).toHaveText(
+    "Response lost. Try again.",
+  );
+  await expect(dialog.getByLabel("Food weight (g)")).toHaveValue("237");
+  await page.unroute("**/api/tracker");
+  await dialog.getByRole("button", { name: "Save meal" }).click();
+  await expect(dialog).not.toBeVisible();
+  expect((await read(page.request)).days[0].meals).toEqual([committed]);
+  await expect(
+    page.getByRole("button", { name: "Add meal", exact: true }),
+  ).toBeFocused();
+
+  await page.getByRole("button", { name: "Edit Lunch" }).click();
+  let finish!: () => void;
+  const saving = new Promise<void>((resolve) => {
+    finish = resolve;
+  });
+  await page.route("**/api/tracker", async (route) => {
+    await saving;
+    await route.continue();
+  });
+  await dialog.getByLabel("Food weight (g)").fill("241");
+  await dialog.getByRole("button", { name: "Save meal" }).click();
+  await expect(
+    dialog.getByRole("button", { name: "Delete meal" }),
+  ).toBeDisabled();
+  await dialog.screenshot({
+    path: `.amp/in/artifacts/saving-meal-${info.project.name}.png`,
+  });
+  finish();
+  await expect(dialog).not.toBeVisible();
+  expect((await read(page.request)).days[0].meals[0].mass).toBe("241");
+});
+
 test("meal presets fill an editable name and save preset or custom meals", async ({
   page,
 }, info) => {
@@ -291,6 +391,73 @@ test("API isolates accounts, rejects cross-origin and invalid restores, and seri
     expect(response.ok()).toBe(true);
   const saved = await read(page.request);
   expect(saved.days[0]).toMatchObject({ morning: "79.2", evening: "79.7" });
+  const headers = {
+    Origin: "http://localhost:5173",
+    "X-Timezone": "Europe/Copenhagen",
+  };
+  expect((await page.request.put("/api/tracker", { headers })).status()).toBe(
+    405,
+  );
+  for (const [data, requestHeaders, message] of [
+    [
+      "{}",
+      { ...headers, "X-Timezone": "invalid" },
+      "A valid timezone is required.",
+    ],
+    ["{", headers, "Invalid JSON."],
+    [
+      JSON.stringify({ type: "goal", target: "80", deadline: today }),
+      headers,
+      "Choose a target date after today.",
+    ],
+  ] as const) {
+    const response = await page.request.post("/api/tracker", {
+      headers: requestHeaders,
+      data,
+    });
+    expect(response.status()).toBe(400);
+    expect(await response.json()).toEqual({ error: message });
+    expect(response.headers()["cache-control"]).toBe("no-store");
+  }
+  const body = JSON.stringify({ type: "units", units: saved.units }).padEnd(
+    1_600_000,
+    " ",
+  );
+  expect(
+    (await page.request.post("/api/tracker", { headers, data: body })).status(),
+  ).toBe(200);
+  expect(
+    (
+      await page.request.post("/api/tracker", {
+        headers,
+        data: body.slice(0, -1) + "é",
+      })
+    ).status(),
+  ).toBe(413);
+  const oversized = {
+    ...saved,
+    days: [
+      {
+        ...saved.days[0],
+        meals: [
+          {
+            id: "large",
+            mass: "1",
+            name: "é".repeat(755_000),
+            period: "before",
+            recordedAt: new Date().toISOString(),
+          },
+        ],
+      },
+    ],
+  };
+  const rejected = await post(page.request, {
+    type: "restore",
+    confirmed: true,
+    data: oversized,
+  });
+  expect(rejected.status()).toBe(400);
+  expect((await rejected.json()).error).toContain("1.5 MB storage limit");
   expect(
     (
       await post(page.request, {

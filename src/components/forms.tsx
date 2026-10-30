@@ -1,4 +1,10 @@
-import { useId, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useId,
+  useState,
+  type ReactNode,
+} from "react";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Button } from "./ui/button";
@@ -9,6 +15,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "./ui/dialog";
+
+const ModalBusy = createContext<((busy: boolean) => void) | null>(null);
 
 export function Field({
   label,
@@ -35,6 +43,7 @@ export function ActionForm({
 }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const setModalBusy = useContext(ModalBusy);
   return (
     <form
       className="action-form"
@@ -42,6 +51,7 @@ export function ActionForm({
         event.preventDefault();
         const data = new FormData(event.currentTarget);
         setBusy(true);
+        setModalBusy?.(true);
         setError("");
         try {
           await onSubmit(data);
@@ -53,21 +63,22 @@ export function ActionForm({
           );
         } finally {
           setBusy(false);
+          setModalBusy?.(false);
         }
       }}
     >
-      <fieldset disabled={busy}>{children}</fieldset>
-      {error && (
-        <p className="error" role="alert">
-          {error}
-        </p>
-      )}
-      <div className="form-actions">
-        {secondary}
-        <Button type="submit" disabled={busy}>
-          {busy ? "Saving…" : submit}
-        </Button>
-      </div>
+      <fieldset disabled={busy}>
+        {children}
+        {error && (
+          <p className="error" role="alert">
+            {error}
+          </p>
+        )}
+        <div className="form-actions">
+          {secondary}
+          <Button type="submit">{busy ? "Saving…" : submit}</Button>
+        </div>
+      </fieldset>
     </form>
   );
 }
@@ -82,19 +93,31 @@ export function Modal({
   children: ReactNode;
   close: () => void;
 }) {
+  const [busy, setBusy] = useState(false);
+  const [opener] = useState(() => document.activeElement);
   return (
     <Dialog
       open
       onOpenChange={(open) => {
-        if (!open) close();
+        if (!open && !busy) close();
       }}
     >
-      <DialogContent>
+      <DialogContent
+        closeDisabled={busy}
+        onCloseAutoFocus={(event) => {
+          event.preventDefault();
+          const target =
+            opener instanceof HTMLElement && opener.isConnected
+              ? opener
+              : document.querySelector<HTMLElement>("main button");
+          target?.focus();
+        }}
+      >
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
-        {children}
+        <ModalBusy value={setBusy}>{children}</ModalBusy>
       </DialogContent>
     </Dialog>
   );

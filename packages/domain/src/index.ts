@@ -294,6 +294,8 @@ export function goalPreview(
   };
 }
 
+export class CommandError extends Error {}
+
 // Synchronous transition: the DO persists the result within one SQLite transaction.
 export function applyCommand(
   data: Dataset,
@@ -311,7 +313,7 @@ export function applyCommand(
       command.type === "replan" &&
       (!existing || existing.deadline <= today || current?.date !== today)
     )
-      throw new Error(
+      throw new CommandError(
         "Replanning needs a measurement today and a future deadline.",
       );
     const target = command.type === "goal" ? command.target : existing!.target;
@@ -324,8 +326,9 @@ export function applyCommand(
         : command.type === "goal"
           ? command.start
           : undefined);
-    if (!reference) throw new Error("Enter a starting weight.");
-    if (deadline <= today) throw new Error("Choose a target date after today.");
+    if (!reference) throw new CommandError("Enter a starting weight.");
+    if (deadline <= today)
+      throw new CommandError("Choose a target date after today.");
     const goal: Goal = {
       activation: today,
       start: reference,
@@ -351,13 +354,13 @@ export function applyCommand(
   if (command.type === "meal") {
     const existing = day.meals.find((m) => m.id === command.id);
     if (!existing && day.morning === null)
-      throw new Error("Record a morning weight before adding meals.");
+      throw new CommandError("Record a morning weight before adding meals.");
     if (
       data.days.some(
         (d) => d.date !== day.date && d.meals.some((m) => m.id === command.id),
       )
     )
-      throw new Error("Meal ID already exists on another date.");
+      throw new CommandError("Meal ID already exists on another date.");
     changed = {
       ...day,
       meals: [
@@ -378,6 +381,9 @@ export function applyCommand(
   };
 }
 
+const unitFactor = (units: Units, kind: "weight" | "mass") =>
+  units === "metric" ? 1 : kind === "weight" ? "0.45359237" : "28.349523125";
+
 export function toCanonical(
   value: string,
   units: Units,
@@ -385,9 +391,7 @@ export function toCanonical(
 ) {
   if (!/^\d+(?:[.,]\d+)?$/.test(value))
     throw new Error("Enter a valid decimal amount.");
-  const result = q(value.replace(",", ".")).mul(
-    units === "metric" ? 1 : kind === "weight" ? "0.45359237" : "28.349523125",
-  );
+  const result = q(value.replace(",", ".")).mul(unitFactor(units, kind));
   if (kind === "weight" && result.compare(0) <= 0)
     throw new Error("Weight must be greater than zero.");
   return result.toFraction();
@@ -396,10 +400,7 @@ export const inUnits = (
   value: string | Fraction,
   units: Units,
   kind: "weight" | "mass",
-) =>
-  q(value).div(
-    units === "metric" ? 1 : kind === "weight" ? "0.45359237" : "28.349523125",
-  );
+) => q(value).div(unitFactor(units, kind));
 export const unitLabel = (units: Units, kind: "weight" | "mass") =>
   units === "metric"
     ? kind === "weight"

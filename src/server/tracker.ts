@@ -1,6 +1,7 @@
 import { DurableObject } from "cloudflare:workers";
 import {
   applyCommand,
+  CommandError,
   decodeCommand,
   decodeDataset,
   emptyDataset,
@@ -38,10 +39,10 @@ export class Tracker extends DurableObject<Env> {
       try {
         next = applyCommand(this.read(), command, today);
       } catch (error) {
+        if (!(error instanceof CommandError)) throw error;
         return {
           ok: false as const,
-          error:
-            error instanceof Error ? error.message : "Could not apply change.",
+          error: error.message,
         };
       }
       const json = JSON.stringify(next);

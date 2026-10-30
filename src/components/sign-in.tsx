@@ -8,6 +8,22 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from "./ui/input-otp";
 
 const pendingCodeKey = "weight-logic-pending-code";
 
+function rememberPendingCode(email?: string) {
+  try {
+    if (email)
+      localStorage.setItem(
+        pendingCodeKey,
+        JSON.stringify({
+          email,
+          expiresAt: Date.now() + 10 * 60 * 1000,
+        }),
+      );
+    else localStorage.removeItem(pendingCodeKey);
+  } catch {
+    // Reload convenience must not prevent sending or redeeming a code.
+  }
+}
+
 export function SignIn() {
   const [pendingEmail] = useState(() => {
     try {
@@ -61,15 +77,7 @@ export function SignIn() {
         throw new Error(
           result.error.message ?? "Could not send your email. Try again.",
         );
-      if (method === "code") {
-        localStorage.setItem(
-          pendingCodeKey,
-          JSON.stringify({
-            email,
-            expiresAt: Date.now() + 10 * 60 * 1000,
-          }),
-        );
-      }
+      if (method === "code") rememberPendingCode(email);
       setSent(true);
       setCode("");
       if (import.meta.env.DEV) {
@@ -147,7 +155,7 @@ export function SignIn() {
                       result.error.message ??
                       "Could not verify this code. Try again.",
                   );
-                localStorage.removeItem(pendingCodeKey);
+                rememberPendingCode();
               } catch (cause) {
                 setError(
                   cause instanceof Error
@@ -241,7 +249,7 @@ export function SignIn() {
                   variant="ghost"
                   disabled={busy}
                   onClick={() => {
-                    localStorage.removeItem(pendingCodeKey);
+                    rememberPendingCode();
                     setSent(false);
                     setCode("");
                     setError("");

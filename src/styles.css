@@ -100,8 +100,7 @@ strong {
   font-weight: 550;
   font-variant-numeric: tabular-nums;
 }
-.muted,
-.model-note {
+.muted {
   color: var(--muted-foreground);
   font-size: 12px;
 }
@@ -346,9 +345,6 @@ strong {
 .inline-actions .action-form {
   margin: 0;
   gap: 0;
-}
-.inline-actions .action-form fieldset:empty {
-  display: none;
 }
 .inline-actions [data-slot="button"] {
   background: transparent;

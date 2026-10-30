@@ -12,7 +12,7 @@ test.beforeEach(async ({ page }) => {
 
 test("magic link signs in, survives reload, cannot be reused, and signs out", async ({
   page,
-}) => {
+}, info) => {
   await page.goto("/");
   await page
     .getByLabel("Email address")
@@ -25,6 +25,21 @@ test("magic link signs in, survives reload, cannot be reused, and signs out", as
   await expect(page.getByLabel("Journal date")).toBeVisible();
   await page.reload();
   await expect(page.getByLabel("Journal date")).toBeVisible();
+  await page.route("**/api/auth/sign-out", (route) =>
+    route.fulfill({
+      status: 503,
+      json: { message: "Unavailable" },
+    }),
+  );
+  await page.getByRole("button", { name: "Sign out" }).click();
+  await expect(page.getByRole("alert")).toHaveText(
+    "Could not sign out. Please try again.",
+  );
+  await expect(page.getByLabel("Journal date")).toBeVisible();
+  await page.screenshot({
+    path: `.amp/in/artifacts/sign-out-error-${info.project.name}.png`,
+  });
+  await page.unroute("**/api/auth/sign-out");
   await page.getByRole("button", { name: "Sign out" }).click();
   await expect(page.getByLabel("Email address")).toBeVisible();
   await page.goto(href!);
@@ -132,11 +147,22 @@ test("email codes stop accepting guesses and a fresh code restores sign-in", asy
 }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "Use an email code instead" }).click();
-  await page
-    .getByLabel("Email address")
-    .fill(`code-${crypto.randomUUID()}@example.test`);
+  const email = `code-${crypto.randomUUID()}@example.test`;
+  await page.getByLabel("Email address").fill(email);
   await page.getByRole("button", { name: "Email me a sign-in code" }).click();
   const code = await page.locator(".local-mail code").innerText();
+  const disabled = await page.request.post(
+    "/api/auth/email-otp/check-verification-otp",
+    {
+      headers: { Origin: "http://localhost:5173" },
+      data: {
+        email,
+        type: "sign-in",
+        otp: code,
+      },
+    },
+  );
+  expect(disabled.status()).toBe(404);
   for (let attempt = 0; attempt < 3; attempt++) {
     await page.getByLabel("Sign-in code", { exact: true }).clear();
     await page
@@ -154,4 +180,68 @@ test("email codes stop accepting guesses and a fresh code restores sign-in", asy
   await page.getByLabel("Sign-in code", { exact: true }).fill(fresh);
   await page.getByRole("button", { name: "Sign in with code" }).click();
   await expect(page.getByLabel("Journal date")).toBeVisible();
+});
+
+test("code sign-in works when optional browser storage fails", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    Storage.prototype.setItem = Storage.prototype.removeItem = () => {
+      throw new Error("Storage blocked");
+    };
+  });
+  await page.goto("/");
+  await page.getByRole("button", { name: "Use an email code instead" }).click();
+  await page
+    .getByLabel("Email address")
+    .fill(`storage-${crypto.randomUUID()}@example.test`);
+  await page.getByRole("button", { name: "Email me a sign-in code" }).click();
+  await expect(page.getByLabel("Sign-in code", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Use another email" }).click();
+  await expect(page.getByLabel("Email address")).toBeEditable();
+  await page.getByRole("button", { name: "Email me a sign-in code" }).click();
+  const code = await page.locator(".local-mail code").innerText();
+  await page.getByLabel("Sign-in code", { exact: true }).fill(code);
+  await page.getByRole("button", { name: "Sign in with code" }).click();
+  await expect(page.getByLabel("Journal date")).toBeVisible();
+});
+
+test("session failures can be retried without discarding a sign-in draft on background refresh", async ({
+  page,
+}, info) => {
+  await page.route("**/api/auth/get-session", (route) =>
+    route.fulfill({ status: 503, json: { message: "Unavailable" } }),
+  );
+  await page.goto("/");
+  await expect(page.getByRole("alert")).toHaveText(
+    "Could not check your session.",
+  );
+  await page.screenshot({
+    path: `.amp/in/artifacts/session-error-${info.project.name}.png`,
+  });
+  await page.unroute("**/api/auth/get-session");
+  await page.getByRole("button", { name: "Try again" }).click();
+  await page.getByLabel("Email address").fill("draft@example.test");
+  let release!: () => void;
+  const pending = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.route("**/api/auth/get-session", async (route) => {
+    await pending;
+    await route.continue();
+  });
+  const request = page.waitForRequest("**/api/auth/get-session");
+  await page.evaluate(() => {
+    document.dispatchEvent(new Event("visibilitychange"));
+  });
+  await request;
+  await expect(page.getByLabel("Email address")).toHaveValue(
+    "draft@example.test",
+  );
+  const response = page.waitForResponse("**/api/auth/get-session");
+  release();
+  await response;
+  await expect(page.getByLabel("Email address")).toHaveValue(
+    "draft@example.test",
+  );
 });

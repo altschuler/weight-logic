@@ -344,6 +344,7 @@ function MealEditor({
   const initial = meal
     ? inUnits(meal.mass, data.units, "mass").toString(12)
     : "";
+  const [id] = useState(() => meal?.id ?? crypto.randomUUID());
   const [name, setName] = useState(meal?.name ?? "");
   const [remove, setRemove] = useState(false);
   return (
@@ -362,7 +363,7 @@ function MealEditor({
             await mutate({
               type: "meal",
               date,
-              id: meal?.id ?? crypto.randomUUID(),
+              id,
               name: String(fields.get("name")).trim(),
               mass:
                 meal && input === initial

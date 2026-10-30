@@ -9,7 +9,6 @@ import {
   toCanonical,
   unitLabel,
   type Dataset,
-  type Command,
 } from "@weight-logic/domain";
 import type Fraction from "fraction.js";
 import type { Mutate } from "@/lib/journal";
@@ -37,14 +36,12 @@ export function GoalEditor({
   const today = localToday();
   const existing = goalAt(data, today);
   const [proposal, setProposal] = useState<{
-    command: Command;
     target: string;
     deadline: string;
     start?: string;
   } | null>(
     replan && existing
       ? {
-          command: { type: "replan" },
           target: existing.target,
           deadline: existing.deadline,
         }
@@ -78,7 +75,9 @@ export function GoalEditor({
         <ActionForm
           submit={replan ? "Accept replan" : "Confirm goal"}
           onSubmit={async () => {
-            await mutate(proposal.command);
+            await mutate(
+              replan ? { type: "replan" } : { type: "goal", ...proposal },
+            );
             close();
           }}
           secondary={
@@ -154,13 +153,7 @@ export function GoalEditor({
             setProposal({
               target,
               deadline,
-              start,
-              command: {
-                type: "goal",
-                target,
-                deadline,
-                ...(start ? { start } : {}),
-              },
+              ...(start ? { start } : {}),
             });
           }}
         >
